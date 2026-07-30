@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Secret Key Information Files
+.env
+
+# Extra Ref Files Used for local development
+docs/

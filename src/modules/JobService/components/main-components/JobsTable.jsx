@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import InlineEditableCell from "./InlineEditableCell";
 import SkillsCell from "./SkillsCell";
 import { getWorkModeClass, getEmploymentTypeClass } from "../../helpers/jobFormatters";
@@ -14,6 +15,7 @@ export default function JobsTable({
   totalElements = 0,
   onPageChange,
 }) {
+  const navigate = useNavigate();
   const [undoState, setUndoState] = useState(null); // { jobId, fieldKey, previousValue, label }
 
   const handleUpdate = async (jobId, fieldKey, updateFn, newValue, label) => {
@@ -74,12 +76,12 @@ export default function JobsTable({
         <table className="w-full text-left text-xs border-collapse">
           <thead>
             <tr className="border-b border-zinc-200/80 bg-zinc-50/75">
-              <th className="py-3 px-4 font-semibold text-zinc-500 w-[24%]">Role & Company</th>
-              <th className="py-3 px-4 font-semibold text-zinc-500 w-[14%]">Location</th>
-              <th className="py-3 px-4 font-semibold text-zinc-500 w-[14%]">Work Mode / Type</th>
-              <th className="py-3 px-4 font-semibold text-zinc-500 w-[14%]">Salary & Exp</th>
-              <th className="py-3 px-4 font-semibold text-zinc-500 w-[22%]">Skills</th>
-              <th className="py-3 px-4 font-semibold text-zinc-500 w-[12%] text-right">Actions</th>
+              <th className="py-2.5 px-3.5 font-semibold text-zinc-500 w-[20%]">Role & Company</th>
+              <th className="py-2.5 px-3.5 font-semibold text-zinc-500 w-[12%]">Location</th>
+              <th className="py-2.5 px-3.5 font-semibold text-zinc-500 w-[14%]">Work Mode / Type</th>
+              <th className="py-2.5 px-3.5 font-semibold text-zinc-500 w-[14%]">Salary & Exp</th>
+              <th className="py-2.5 px-3.5 font-semibold text-zinc-500 w-[22%]">Skills</th>
+              <th className="py-2.5 px-3.5 font-semibold text-zinc-500 w-[18%] text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-100">
@@ -90,38 +92,38 @@ export default function JobsTable({
                 className="group hover:bg-zinc-50/80 cursor-pointer transition-colors duration-100"
               >
                 {/* Title & Company */}
-                <td className="py-2.5 px-4 w-[24%] align-top">
+                <td className="py-2 px-3.5 w-[20%] align-middle">
                   <div className="flex flex-col">
                     <InlineEditableCell
                       value={job.title}
                       onSave={(val) => handleUpdate(job.id, "title", jobApi.updateTitle, val, "Title")}
                       placeholder="Untitled Role"
                       fieldLabel="Title"
-                      textClassName="font-semibold text-zinc-900"
+                      textClassName="font-semibold text-zinc-900 leading-snug"
                     />
                     <InlineEditableCell
                       value={job.company}
                       onSave={(val) => handleUpdate(job.id, "company", jobApi.updateCompany, val, "Company")}
                       placeholder="Company"
                       fieldLabel="Company"
-                      textClassName="text-[11px] text-zinc-500"
+                      textClassName="text-[11px] text-zinc-500 leading-snug"
                     />
                   </div>
                 </td>
 
                 {/* Location */}
-                <td className="py-2.5 px-4 w-[14%] align-top">
+                <td className="py-2 px-3.5 w-[12%] align-middle">
                   <InlineEditableCell
                     value={job.location}
                     onSave={(val) => handleUpdate(job.id, "location", jobApi.updateLocation, val, "Location")}
                     placeholder="Set location"
                     fieldLabel="Location"
-                    textClassName="text-zinc-700 font-medium"
+                    textClassName="text-zinc-700 font-medium leading-snug"
                   />
                 </td>
 
                 {/* Work Mode & Employment Type */}
-                <td className="py-2.5 px-4 w-[14%] align-top">
+                <td className="py-2 px-3.5 w-[14%] align-middle">
                   <div className="flex flex-wrap gap-1 items-center">
                     <span className={`inline-block px-1.5 py-0.5 text-[10px] font-medium rounded border ${getWorkModeClass(job.workMode)}`}>
                       <InlineEditableCell
@@ -149,52 +151,65 @@ export default function JobsTable({
                 </td>
 
                 {/* Salary & Experience */}
-                <td className="py-2.5 px-4 w-[14%] align-top">
+                <td className="py-2 px-3.5 w-[14%] align-middle">
                   <div className="flex flex-col">
                     <InlineEditableCell
                       value={job.salary}
                       onSave={(val) => handleUpdate(job.id, "salary", jobApi.updateSalary, val, "Salary")}
                       placeholder="Salary"
                       fieldLabel="Salary"
-                      textClassName="font-medium text-zinc-900"
+                      textClassName="font-medium text-zinc-900 leading-snug"
                     />
                     <InlineEditableCell
                       value={job.experience}
                       onSave={(val) => handleUpdate(job.id, "experience", jobApi.updateExperience, val, "Experience")}
                       placeholder="Experience"
                       fieldLabel="Experience"
-                      textClassName="text-[11px] text-zinc-500"
+                      textClassName="text-[11px] text-zinc-500 leading-snug"
                     />
                   </div>
                 </td>
 
                 {/* Skills */}
-                <td className="py-2.5 px-4 w-[22%] align-top">
+                <td className="py-2 px-3.5 w-[22%] align-middle">
                   <SkillsCell
                     skills={job.skills || []}
                     onSave={(val) => handleUpdate(job.id, "skills", jobApi.updateSkills, val, "Skills")}
                   />
                 </td>
 
-                {/* Actions */}
-                <td className="py-2.5 px-4 w-[12%] align-top text-right" onClick={(e) => e.stopPropagation()}>
-                  <div className="inline-flex items-center gap-1">
+                {/* Actions & Interact */}
+                <td className="py-2 px-3.5 w-[18%] align-middle text-right" onClick={(e) => e.stopPropagation()}>
+                  <div className="inline-flex items-center gap-1.5 justify-end">
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/jobs/${job.id}/interact`)}
+                      title="Interact with AI Copilot for this job"
+                      className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-black text-white hover:bg-zinc-800 active:scale-95 transition-all shadow-xs"
+                    >
+                      <svg className="h-3 w-3 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                      </svg>
+                      <span>Interact</span>
+                    </button>
+
                     <button
                       type="button"
                       onClick={() => onViewClick(job.id)}
                       title="View full details"
-                      className="p-1.5 rounded-lg text-zinc-400 hover:text-black hover:bg-zinc-100 transition-colors"
+                      className="p-1 rounded-lg text-zinc-400 hover:text-black hover:bg-zinc-100 transition-colors"
                     >
                       <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                       </svg>
                     </button>
+
                     <button
                       type="button"
                       onClick={() => onDeleteClick(job)}
                       title="Delete application"
-                      className="p-1.5 rounded-lg text-zinc-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                      className="p-1 rounded-lg text-zinc-400 hover:text-red-600 hover:bg-red-50 transition-colors"
                     >
                       <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -209,7 +224,7 @@ export default function JobsTable({
       </div>
 
       {/* Pagination Footer */}
-      <div className="flex items-center justify-between px-4 py-3 border-t border-zinc-100 bg-zinc-50/50 text-xs text-zinc-500">
+      <div className="flex items-center justify-between px-4 py-2.5 border-t border-zinc-100 bg-zinc-50/50 text-xs text-zinc-500">
         <span>
           Showing <strong className="text-zinc-900">{jobs.length}</strong> of <strong className="text-zinc-900">{totalElements}</strong> saved jobs
         </span>

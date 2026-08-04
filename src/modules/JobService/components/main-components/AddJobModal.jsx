@@ -101,7 +101,7 @@ export default function AddJobModal({ isOpen, onClose, onSubmit }) {
 
         <form onSubmit={handleFormSubmit} className="flex-1 flex flex-col min-h-0 space-y-3">
           {activeTab === "json" ? (
-            <div className="flex-1 flex flex-col min-h-[220px]">
+            <div className="flex-1 flex flex-col min-h-55">
               <div className="flex items-center justify-between mb-1.5">
                 <label className="text-xs font-medium text-zinc-700">Paste JSON Payload</label>
                 <button

@@ -216,7 +216,7 @@ export default function JobDetailsDrawer({ isOpen, jobId, onClose, onJobUpdated 
                   <div className="flex items-center justify-between">
                     <span className="text-zinc-500">Source URL</span>
                     {job.sourceUrl ? (
-                      <a href={job.sourceUrl} target="_blank" rel="noreferrer" className="text-xs text-black font-medium hover:underline truncate max-w-[280px]">
+                      <a href={job.sourceUrl} target="_blank" rel="noreferrer" className="text-xs text-black font-medium hover:underline truncate max-w-70">
                         {job.sourceUrl}
                       </a>
                     ) : (

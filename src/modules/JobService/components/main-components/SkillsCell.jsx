@@ -51,11 +51,11 @@ export default function SkillsCell({ skills = [], onSave }) {
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-1 max-w-[280px]" onClick={(e) => e.stopPropagation()}>
+    <div className="flex flex-wrap items-center gap-1 max-w-60 max-h-14 overflow-y-auto" onClick={(e) => e.stopPropagation()}>
       {(skills || []).map((skill, idx) => (
         <span
           key={idx}
-          className="group inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded-md bg-zinc-100 text-zinc-800 border border-zinc-200/80 transition-all hover:bg-zinc-200"
+          className="group inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded bg-zinc-100 text-zinc-800 border border-zinc-200/80 leading-none transition-all hover:bg-zinc-200"
         >
           {skill}
           <button
@@ -78,19 +78,19 @@ export default function SkillsCell({ skills = [], onSave }) {
           onBlur={handleAdd}
           onKeyDown={handleKeyDown}
           placeholder="Skill..."
-          className="w-16 px-1.5 py-0.5 text-[11px] rounded bg-white border border-black/30 outline-none text-black"
+          className="w-14 px-1 py-0.5 text-[10px] rounded bg-white border border-black/30 outline-none text-black leading-none"
         />
       ) : (
         <button
           type="button"
           onClick={() => setIsAdding(true)}
-          className="inline-flex items-center px-1.5 py-0.5 text-[11px] font-medium text-zinc-500 rounded hover:bg-zinc-100 hover:text-black transition-colors"
+          className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium text-zinc-500 rounded hover:bg-zinc-100 hover:text-black transition-colors leading-none"
         >
           + Add
         </button>
       )}
 
-      {isSaving && <JobSpinner className="h-3 w-3 text-zinc-600 ml-1" />}
+      {isSaving && <JobSpinner className="h-2.5 w-2.5 text-zinc-600 ml-0.5" />}
     </div>
   );
 }

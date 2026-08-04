@@ -76,9 +76,6 @@ export default function JobDashboardPage() {
     setJobs((prev) => prev.map((j) => (j.id === updatedJob.id ? { ...j, ...updatedJob } : j)));
   };
 
-  const remoteCount = jobs.filter((j) => (j.workMode || "").toLowerCase().includes("remote")).length;
-  const fullTimeCount = jobs.filter((j) => (j.employmentType || "").toLowerCase().includes("full")).length;
-
   return (
     <div className="min-h-screen bg-zinc-100 font-sans text-black flex flex-col">
       <JobNavbar
@@ -87,33 +84,13 @@ export default function JobDashboardPage() {
         onOpenAddModal={() => setIsAddModalOpen(true)}
       />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-        {/* Header Stats & Quick Overview */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Tracked Opportunities</h1>
-            <p className="text-xs text-zinc-500 mt-0.5">
-              Manage, edit, and monitor your target job listings with instant auto-save.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <div className="px-3.5 py-2 rounded-xl bg-white/70 backdrop-blur-md border border-zinc-200 shadow-xs flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-black" />
-              <span className="text-xs text-zinc-500 font-medium">Total:</span>
-              <span className="text-xs font-bold text-zinc-900">{totalElements}</span>
-            </div>
-            <div className="px-3.5 py-2 rounded-xl bg-white/70 backdrop-blur-md border border-zinc-200 shadow-xs flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-zinc-400" />
-              <span className="text-xs text-zinc-500 font-medium">Remote:</span>
-              <span className="text-xs font-bold text-zinc-900">{remoteCount}</span>
-            </div>
-            <div className="px-3.5 py-2 rounded-xl bg-white/70 backdrop-blur-md border border-zinc-200 shadow-xs flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-zinc-300" />
-              <span className="text-xs text-zinc-500 font-medium">Full Time:</span>
-              <span className="text-xs font-bold text-zinc-900">{fullTimeCount}</span>
-            </div>
-          </div>
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-5">
+        {/* Header Title */}
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900">Tracked Opportunities</h1>
+          <p className="text-xs text-zinc-500 mt-0.5">
+            Manage, edit, and interact with your saved job postings with instant auto-save.
+          </p>
         </div>
 
         {/* Table Area */}

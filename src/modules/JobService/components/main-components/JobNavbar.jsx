@@ -12,25 +12,14 @@ export default function JobNavbar({ onOpenAddModal, search, onSearchChange }) {
   return (
     <header className="sticky top-0 z-30 w-full border-b border-zinc-200/80 bg-white/80 backdrop-blur-xl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-        {/* Brand & Tabs */}
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2.5">
-            <div className="h-8 w-8 rounded-xl bg-black flex items-center justify-center text-white font-bold text-sm shadow-xs">
-              C
-            </div>
-            <div>
-              <span className="font-bold text-sm text-zinc-900 tracking-tight block leading-tight">Career OS</span>
-              <span className="text-[10px] text-zinc-400 font-medium">Job Management</span>
-            </div>
+        {/* Brand */}
+        <div className="flex items-center gap-2.5">
+          <div className="h-8 w-8 rounded-xl bg-black flex items-center justify-center text-white font-bold text-sm shadow-xs">
+            C
           </div>
-
-          <div className="hidden sm:flex items-center gap-1 pl-4 border-l border-zinc-200">
-            <button
-              type="button"
-              className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-zinc-100 text-black border border-zinc-200 shadow-xs"
-            >
-              Dashboard
-            </button>
+          <div>
+            <span className="font-bold text-sm text-zinc-900 tracking-tight block leading-tight">Career OS</span>
+            <span className="text-[10px] text-zinc-400 font-medium">Job Management</span>
           </div>
         </div>
 

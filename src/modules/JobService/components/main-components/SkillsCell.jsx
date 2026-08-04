@@ -1,0 +1,96 @@
+import { useState, useRef, useEffect } from "react";
+import JobSpinner from "../loaders/JobSpinner";
+
+export default function SkillsCell({ skills = [], onSave }) {
+  const [isAdding, setIsAdding] = useState(false);
+  const [newSkill, setNewSkill] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    if (isAdding && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isAdding]);
+
+  const handleRemove = async (indexToRemove, e) => {
+    e.stopPropagation();
+    if (isSaving) return;
+    const updated = skills.filter((_, idx) => idx !== indexToRemove);
+    try {
+      setIsSaving(true);
+      await onSave(updated);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleAdd = async () => {
+    const trimmed = newSkill.trim();
+    setIsAdding(false);
+    setNewSkill("");
+    if (!trimmed || skills.includes(trimmed)) return;
+    const updated = [...skills, trimmed];
+    try {
+      setIsSaving(true);
+      await onSave(updated);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleAdd();
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      setIsAdding(false);
+      setNewSkill("");
+    }
+  };
+
+  return (
+    <div className="flex flex-wrap items-center gap-1 max-w-[280px]" onClick={(e) => e.stopPropagation()}>
+      {(skills || []).map((skill, idx) => (
+        <span
+          key={idx}
+          className="group inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded-md bg-zinc-100 text-zinc-800 border border-zinc-200/80 transition-all hover:bg-zinc-200"
+        >
+          {skill}
+          <button
+            type="button"
+            onClick={(e) => handleRemove(idx, e)}
+            className="opacity-40 group-hover:opacity-100 hover:text-red-600 transition-opacity text-[10px] leading-none"
+            title="Remove skill"
+          >
+            ×
+          </button>
+        </span>
+      ))}
+
+      {isAdding ? (
+        <input
+          ref={inputRef}
+          type="text"
+          value={newSkill}
+          onChange={(e) => setNewSkill(e.target.value)}
+          onBlur={handleAdd}
+          onKeyDown={handleKeyDown}
+          placeholder="Skill..."
+          className="w-16 px-1.5 py-0.5 text-[11px] rounded bg-white border border-black/30 outline-none text-black"
+        />
+      ) : (
+        <button
+          type="button"
+          onClick={() => setIsAdding(true)}
+          className="inline-flex items-center px-1.5 py-0.5 text-[11px] font-medium text-zinc-500 rounded hover:bg-zinc-100 hover:text-black transition-colors"
+        >
+          + Add
+        </button>
+      )}
+
+      {isSaving && <JobSpinner className="h-3 w-3 text-zinc-600 ml-1" />}
+    </div>
+  );
+}

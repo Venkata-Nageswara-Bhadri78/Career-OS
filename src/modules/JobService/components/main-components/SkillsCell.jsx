@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import JobSpinner from "../loaders/JobSpinner";
 
-export default function SkillsCell({ skills = [], onSave }) {
+export default function SkillsCell({ skills = [], onSave, className = "" }) {
   const [isAdding, setIsAdding] = useState(false);
   const [newSkill, setNewSkill] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -51,7 +51,10 @@ export default function SkillsCell({ skills = [], onSave }) {
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-1 max-w-60 max-h-14 overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+    <div
+      className={`flex flex-wrap items-center gap-1.5 w-full ${className || "max-h-24 overflow-y-auto"}`}
+      onClick={(e) => e.stopPropagation()}
+    >
       {(skills || []).map((skill, idx) => (
         <span
           key={idx}

@@ -75,7 +75,7 @@ export default function JobsTable({
       <div className="overflow-x-auto">
         <table className="w-full text-left text-xs border-collapse">
           <thead>
-            <tr className="border-b border-zinc-200/80 bg-zinc-50/75">
+            <tr className="border-b border-zinc-200/90 bg-zinc-50/80">
               <th className="py-2.5 px-3.5 font-semibold text-zinc-500 w-[20%]">Role & Company</th>
               <th className="py-2.5 px-3.5 font-semibold text-zinc-500 w-[12%]">Location</th>
               <th className="py-2.5 px-3.5 font-semibold text-zinc-500 w-[14%]">Work Mode / Type</th>
@@ -84,12 +84,12 @@ export default function JobsTable({
               <th className="py-2.5 px-3.5 font-semibold text-zinc-500 w-[18%] text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-zinc-100">
+          <tbody className="divide-y divide-zinc-100/80">
             {jobs.map((job) => (
               <tr
                 key={job.id}
                 onClick={() => onViewClick(job.id)}
-                className="group hover:bg-zinc-50/80 cursor-pointer transition-colors duration-100"
+                className="group odd:bg-white even:bg-zinc-50/50 hover:bg-zinc-100/80! cursor-pointer transition-colors duration-150"
               >
                 {/* Title & Company */}
                 <td className="py-2 px-3.5 w-[20%] align-middle">
@@ -122,31 +122,25 @@ export default function JobsTable({
                   />
                 </td>
 
-                {/* Work Mode & Employment Type */}
+                {/* Work Mode & Employment Type (Custom Selection Style) */}
                 <td className="py-2 px-3.5 w-[14%] align-middle">
-                  <div className="flex flex-wrap gap-1 items-center">
-                    <span className={`inline-block px-1.5 py-0.5 text-[10px] font-medium rounded border ${getWorkModeClass(job.workMode)}`}>
-                      <InlineEditableCell
-                        value={job.workMode}
-                        onSave={(val) => handleUpdate(job.id, "workMode", jobApi.updateWorkMode, val, "Work Mode")}
-                        type="select"
-                        options={["Remote", "Hybrid", "On-site"]}
-                        placeholder="Mode"
-                        fieldLabel="Work Mode"
-                        textClassName="font-medium"
-                      />
-                    </span>
-                    <span className={`inline-block px-1.5 py-0.5 text-[10px] font-medium rounded border ${getEmploymentTypeClass(job.employmentType)}`}>
-                      <InlineEditableCell
-                        value={job.employmentType}
-                        onSave={(val) => handleUpdate(job.id, "employmentType", jobApi.updateEmploymentType, val, "Employment Type")}
-                        type="select"
-                        options={["Full Time", "Part Time", "Contract", "Internship"]}
-                        placeholder="Type"
-                        fieldLabel="Employment Type"
-                        textClassName="font-medium"
-                      />
-                    </span>
+                  <div className="flex flex-wrap gap-1.5 items-center">
+                    <InlineEditableCell
+                      value={job.workMode}
+                      onSave={(val) => handleUpdate(job.id, "workMode", jobApi.updateWorkMode, val, "Work Mode")}
+                      type="select"
+                      options={["Remote", "Hybrid", "On-site"]}
+                      placeholder="Mode"
+                      fieldLabel="Work Mode"
+                    />
+                    <InlineEditableCell
+                      value={job.employmentType}
+                      onSave={(val) => handleUpdate(job.id, "employmentType", jobApi.updateEmploymentType, val, "Employment Type")}
+                      type="select"
+                      options={["Full Time", "Part Time", "Contract", "Internship"]}
+                      placeholder="Type"
+                      fieldLabel="Employment Type"
+                    />
                   </div>
                 </td>
 
@@ -191,6 +185,7 @@ export default function JobsTable({
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                       </svg>
                       <span>Interact</span>
+                      ✨
                     </button>
 
                     <button
@@ -251,16 +246,25 @@ export default function JobsTable({
         </div>
       </div>
 
-      {/* Undo Toast Notification Bar */}
+      {/* Undo Toast Notification Bar (Top Right with Smooth Animation) */}
       {undoState && (
-        <div className="fixed bottom-6 right-6 z-40 flex items-center gap-3 px-4 py-2.5 rounded-xl bg-black text-white text-xs shadow-xl animate-in slide-in-from-bottom-2 duration-150">
-          <span>Updated {undoState.label}</span>
+        <div className="fixed top-6 right-6 z-50 flex items-center justify-center gap-3 px-3.5 py-2 rounded-lg bg-zinc-400 text-white text-xs shadow-2xl animate-in fade-in slide-in-from-top-4 duration-200">
+          <span className="h-2 w-2 rounded-full bg-emerald-400 shrink-0" />
+          <span className="font-medium text-zinc-100">Updated {undoState.label}</span>
           <button
             type="button"
             onClick={handleUndo}
-            className="font-bold underline underline-offset-2 text-zinc-300 hover:text-white"
+            className="px-2.5 py-1 text-xs font-bold rounded-xl bg-white text-zinc-900 hover:bg-zinc-100 active:scale-95 transition-all shadow-xs ml-1"
           >
             Undo
+          </button>
+          <button
+            type="button"
+            onClick={() => setUndoState(null)}
+            className="px-1 text-black bg-white transition-colors rounded-full"
+            title="Dismiss"
+          >
+            ✕
           </button>
         </div>
       )}

@@ -15,22 +15,49 @@ export default function InlineEditableCell({
   const [currentValue, setCurrentValue] = useState(value ?? "");
   const [isSaving, setIsSaving] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
+  const [isOpenMenu, setIsOpenMenu] = useState(false);
   const inputRef = useRef(null);
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
-    if (isEditing && inputRef.current) {
+    if (isEditing && inputRef.current && type === "text") {
       inputRef.current.focus();
-      if (type === "text" && inputRef.current.select) {
+      if (inputRef.current.select) {
         inputRef.current.select();
       }
     }
   }, [isEditing, type]);
 
+  // Handle outside click for custom dropdown
+  useEffect(() => {
+    if (!isOpenMenu) return;
+    const handleOutsideClick = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setIsOpenMenu(false);
+      }
+    };
+    const handleEscape = (e) => {
+      if (e.key === "Escape") {
+        setIsOpenMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [isOpenMenu]);
+
   const handleStartEdit = (e) => {
     e.stopPropagation();
     if (isSaving) return;
-    setCurrentValue(value ?? "");
-    setIsEditing(true);
+    if (type === "select") {
+      setIsOpenMenu((prev) => !prev);
+    } else {
+      setCurrentValue(value ?? "");
+      setIsEditing(true);
+    }
   };
 
   const handleCancel = () => {
@@ -38,9 +65,10 @@ export default function InlineEditableCell({
     setIsEditing(false);
   };
 
-  const handleCommit = async () => {
+  const handleCommit = async (valToSave = currentValue) => {
     setIsEditing(false);
-    const trimmed = String(currentValue ?? "").trim();
+    setIsOpenMenu(false);
+    const trimmed = String(valToSave ?? "").trim();
     const original = String(value ?? "").trim();
 
     if (trimmed === original) return;
@@ -67,28 +95,75 @@ export default function InlineEditableCell({
     }
   };
 
-  if (isEditing) {
-    if (type === "select") {
-      return (
-        <div className="relative inline-flex items-center" onClick={(e) => e.stopPropagation()}>
-          <select
-            ref={inputRef}
-            value={currentValue}
-            onChange={(e) => setCurrentValue(e.target.value)}
-            onBlur={handleCommit}
-            onKeyDown={handleKeyDown}
-            className="px-2 py-1 text-xs rounded-md bg-white border border-black/30 shadow-xs focus:outline-none focus:ring-1 focus:ring-black text-black"
-          >
-            {options.map((opt) => (
-              <option key={opt.value || opt} value={opt.value || opt}>
-                {opt.label || opt}
-              </option>
-            ))}
-          </select>
-        </div>
-      );
-    }
+  // Custom Popover Selection for type === "select"
+  if (type === "select") {
+    const normalizedOptions = options.map((opt) =>
+      typeof opt === "object" ? opt : { value: opt, label: opt }
+    );
+    const currentLabel =
+      normalizedOptions.find((o) => o.value === value)?.label || value || placeholder;
 
+    return (
+      <div className="relative inline-block" ref={dropdownRef} onClick={(e) => e.stopPropagation()}>
+        <button
+          type="button"
+          onClick={handleStartEdit}
+          disabled={isSaving}
+          title={`Change ${fieldLabel}`}
+          className={`group inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium rounded-lg bg-white text-zinc-900 border border-zinc-200/90 shadow-2xs hover:border-zinc-400 hover:shadow-xs focus:outline-none focus:ring-2 focus:ring-zinc-900/10 transition-all ${className}`}
+        >
+          <span className="truncate">{currentLabel}</span>
+          {isSaving ? (
+            <JobSpinner className="h-2.5 w-2.5 text-zinc-700 shrink-0" />
+          ) : (
+            <svg
+              className={`h-3 w-3 text-zinc-400 group-hover:text-zinc-900 transition-transform duration-150 shrink-0 ${
+                isOpenMenu ? "rotate-180 text-zinc-900" : ""
+              }`}
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          )}
+        </button>
+
+        {isOpenMenu && (
+          <div className="absolute top-full left-0 mt-1 min-w-[130px] rounded-xl bg-white border border-zinc-200/90 shadow-xl p-1 z-50 animate-in fade-in zoom-in-95 duration-100">
+
+            <div className="space-y-0.5 max-h-48 overflow-y-auto">
+              {normalizedOptions.map((opt) => {
+                const isSelected = opt.value === value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => handleCommit(opt.value)}
+                    className={`w-full flex items-center justify-between px-2.5 py-1.5 text-xs rounded-lg text-left font-medium transition-colors ${
+                      isSelected
+                        ? "bg-zinc-100 text-zinc-900 font-semibold"
+                        : "text-zinc-700 hover:bg-zinc-50 hover:text-black"
+                    }`}
+                  >
+                    <span>{opt.label}</span>
+                    {isSelected && (
+                      <svg className="h-3.5 w-3.5 text-black shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Text Inline Editor
+  if (isEditing) {
     return (
       <div className="relative inline-flex items-center w-full" onClick={(e) => e.stopPropagation()}>
         <input
@@ -96,10 +171,10 @@ export default function InlineEditableCell({
           type="text"
           value={currentValue}
           onChange={(e) => setCurrentValue(e.target.value)}
-          onBlur={handleCommit}
+          onBlur={() => handleCommit()}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
-          className="w-full px-2 py-1 text-xs rounded-md bg-white border border-black/30 shadow-xs focus:outline-none focus:ring-1 focus:ring-black text-black"
+          className="w-full px-2 py-1 text-xs rounded-lg bg-white border border-black shadow-xs focus:outline-none focus:ring-2 focus:ring-black/10 text-black leading-snug"
         />
       </div>
     );
@@ -114,15 +189,15 @@ export default function InlineEditableCell({
       <span className={`truncate text-xs ${!value ? "text-zinc-400 italic" : textClassName}`}>
         {value || placeholder}
       </span>
-      {isSaving && <JobSpinner className="h-3 w-3 text-zinc-600" />}
+      {isSaving && <JobSpinner className="h-3 w-3 text-zinc-600 shrink-0" />}
       {justSaved && (
-        <svg className="h-3 w-3 text-emerald-600 animate-in fade-in" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className="h-3 w-3 text-emerald-600 animate-in fade-in shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
         </svg>
       )}
       {!isSaving && !justSaved && (
         <svg
-          className="h-2.5 w-2.5 text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity"
+          className="h-2.5 w-2.5 text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"

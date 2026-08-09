@@ -1,9 +1,10 @@
-import { useState, useEffect, startTransition } from "react";
+import { useState, useEffect, useRef, startTransition } from "react";
 import JobNavbar from "../components/main-components/JobNavbar";
 import JobsTable from "../components/main-components/JobsTable";
 import AddJobModal from "../components/main-components/AddJobModal";
 import DeleteConfirmModal from "../components/main-components/DeleteConfirmModal";
 import JobDetailsDrawer from "../components/main-components/JobDetailsDrawer";
+import SuccessSnackbar from "../components/main-components/SuccessSnackbar";
 import JobTableSkeleton from "../components/skeletons/JobTableSkeleton";
 import jobApi from "../api/jobApi";
 
@@ -17,6 +18,8 @@ export default function JobDashboardPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [jobToDelete, setJobToDelete] = useState(null);
   const [selectedJobId, setSelectedJobId] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
+  const toastTimerRef = useRef(null);
 
   useEffect(() => {
     let ignore = false;
@@ -61,7 +64,25 @@ export default function JobDashboardPage() {
       setJobs((prev) => [created, ...prev]);
       setTotalElements((prev) => prev + 1);
     });
+    showSuccessToast("Job added successfully.");
   };
+
+  const showSuccessToast = (message) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setSuccessMessage(message);
+    toastTimerRef.current = setTimeout(() => setSuccessMessage(null), 3500);
+  };
+
+  const dismissSuccessToast = () => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setSuccessMessage(null);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    };
+  }, []);
 
   const handleDeleteJob = async (jobId) => {
     await jobApi.deleteJob(jobId);
@@ -130,6 +151,8 @@ export default function JobDashboardPage() {
         onClose={() => setSelectedJobId(null)}
         onJobUpdated={handleJobFieldUpdated}
       />
+
+      <SuccessSnackbar message={successMessage} onDismiss={dismissSuccessToast} />
     </div>
   );
 }

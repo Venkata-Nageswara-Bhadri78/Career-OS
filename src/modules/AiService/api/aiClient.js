@@ -204,13 +204,22 @@ export async function streamAiChat({
         const { value, done } = await reader.read();
         if (done) break;
 
-        buffer += decoder.decode(value, { stream: true });
+        const decodedChunk = decoder.decode(value, { stream: true });
+        // #region agent log
+        fetch('http://127.0.0.1:7259/ingest/92ea2b9a-6250-4295-96e5-480e481df005',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1c9d83'},body:JSON.stringify({sessionId:'1c9d83',runId:'run1',hypothesisId:'H1_raw_chunk',location:'aiClient.js:207',message:'raw decoded chunk from reader',data:{decodedChunk},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
+        buffer += decodedChunk;
         const lines = buffer.split(/\r?\n/);
         buffer = lines.pop() ?? ""; // Retain incomplete line in buffer
 
         for (const line of lines) {
           const trimmed = line.trim();
           if (!trimmed || trimmed.startsWith(":")) continue; // SSE comment or heartbeat
+
+          // Standard SSE control fields describe metadata about the event (its name,
+          // last-event-id, or reconnection delay) - they are never message content and
+          // must never fall through to the raw-text fallback below.
+          if (/^(?:event|id|retry):/i.test(trimmed)) continue;
 
           let dataStr = line;
           let isSse = false;
@@ -220,12 +229,21 @@ export async function streamAiChat({
             isSse = true;
           }
 
-          if (isEndChunk(dataStr)) {
+          const isEventLine = trimmed.startsWith("event:");
+          const endChunkResult = isEndChunk(dataStr);
+          // #region agent log
+          fetch('http://127.0.0.1:7259/ingest/92ea2b9a-6250-4295-96e5-480e481df005',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1c9d83'},body:JSON.stringify({sessionId:'1c9d83',runId:'run1',hypothesisId:'H2_line_classification',location:'aiClient.js:213',message:'per-line SSE classification',data:{line,trimmed,isSse,isEventLine,dataStr,endChunkResult},timestamp:Date.now()})}).catch(()=>{});
+          // #endregion
+
+          if (endChunkResult) {
             onComplete(accumulatedText);
             return;
           }
 
           const delta = extractDeltaText(dataStr);
+          // #region agent log
+          fetch('http://127.0.0.1:7259/ingest/92ea2b9a-6250-4295-96e5-480e481df005',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1c9d83'},body:JSON.stringify({sessionId:'1c9d83',runId:'run1',hypothesisId:'H3_delta_extraction',location:'aiClient.js:228',message:'delta computed for line, about to append if truthy',data:{isEventLine,dataStr,delta,willAppendAsContent:Boolean(delta)},timestamp:Date.now()})}).catch(()=>{});
+          // #endregion
           if (delta) {
             accumulatedText += delta;
             onToken(delta, accumulatedText);
@@ -237,6 +255,9 @@ export async function streamAiChat({
         }
       }
     } catch (readErr) {
+      // #region agent log
+      fetch('http://127.0.0.1:7259/ingest/92ea2b9a-6250-4295-96e5-480e481df005',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1c9d83'},body:JSON.stringify({sessionId:'1c9d83',runId:'run1',hypothesisId:'H5_abrupt_close',location:'aiClient.js:239',message:'reader.read() threw mid-stream, checking accumulated text',data:{readErrMessage:readErr?.message,readErrName:readErr?.name,accumulatedText},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
       // If the backend closes the connection abruptly after sending tokens,
       // treat it as successful stream termination instead of showing a fatal network error
       if (accumulatedText.trim().length > 0) {
@@ -248,7 +269,7 @@ export async function streamAiChat({
     }
 
     // Flush any remaining buffer if present
-    if (buffer.trim()) {
+    if (buffer.trim() && !/^(?:event|id|retry):/i.test(buffer.trim())) {
       let dataStr = buffer;
       if (buffer.trim().startsWith("data:")) {
         dataStr = buffer.replace(/^\s*data:\s?/, "");
@@ -262,6 +283,9 @@ export async function streamAiChat({
       }
     }
 
+    // #region agent log
+    fetch('http://127.0.0.1:7259/ingest/92ea2b9a-6250-4295-96e5-480e481df005',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1c9d83'},body:JSON.stringify({sessionId:'1c9d83',runId:'run1',hypothesisId:'H4_final_text',location:'aiClient.js:265',message:'final accumulatedText passed to onComplete (natural end of stream)',data:{accumulatedText},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
     onComplete(accumulatedText);
   } catch (error) {
     if (signal?.aborted || error.name === "AbortError") {

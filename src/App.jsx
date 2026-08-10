@@ -7,7 +7,7 @@ import ResetPasswordPage from "./modules/AuthService/pages/ResetPasswordPage";
 import VerifyEmailPage from "./modules/AuthService/pages/VerifyEmailPage";
 import ProtectedRoute from "./modules/JobService/routes/ProtectedRoute";
 import JobIndex from "./modules/JobService/components/JobIndex";
-import AiIndex from "./modules/AiService/components/AiIndex";
+import ChatAssistantIndex from "./modules/ChatAssistant/components/ChatAssistantIndex";
 
 function App() {
   return (
@@ -24,8 +24,8 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<JobIndex />} />
           <Route path="/jobs" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/jobs/:jobId/interact" element={<AiIndex />} />
-          <Route path="/ai" element={<AiIndex />} />
+          <Route path="/jobs/:jobId/interact" element={<ChatAssistantIndex />} />
+          <Route path="/ai" element={<ChatAssistantIndex />} />
         </Route>
 
         <Route path="/" element={<Navigate to="/dashboard" replace />} />

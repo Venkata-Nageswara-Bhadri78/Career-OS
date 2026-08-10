@@ -303,7 +303,7 @@ export default function JobDetailsDrawer({
                     onBlur={(e) => handleFieldUpdate(jobApi.updateDescription, e.target.value, "description")}
                     rows={5}
                     placeholder="Paste or edit job description..."
-                    className="w-full p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80 focus:bg-white focus:border-black focus:outline-none transition-all text-xs text-zinc-800 leading-relaxed resize-y break-words min-w-0"
+                    className="w-full p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80 focus:bg-white focus:border-black focus:outline-none transition-all text-xs text-zinc-800 leading-relaxed resize-y wrap-break-word min-w-0"
                   />
                 </div>
 

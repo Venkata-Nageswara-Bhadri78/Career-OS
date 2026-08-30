@@ -1,16 +1,41 @@
-# React + Vite
+# Career OS
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Career OS is a personal career management platform that centralizes job-search and career-related workflows.
 
-Currently, two official plugins are available:
+The project focuses on clean architecture, modularity, security, scalability, and maintainability.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🚧 Status
 
-## React Compiler
+Career OS is currently under active development. Features, architecture, UI, and documentation may change as the project evolves.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🎯 Planned Features
 
-## Expanding the ESLint configuration
+* User authentication and profiles
+* Resume management
+* Job tracking
+* Job information extraction
+* AI-assisted career support
+* Chat-based assistance
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 🏗️ Architecture
+
+The project uses a modular architecture.
+
+### Frontend
+
+* React
+* Vite
+* JavaScript
+* Tailwind CSS
+
+### Backend
+
+* Spring Boot
+* Modular business services
+* Shared infrastructure
+
+## 📚 Documentation
+
+Additional documentation is available in the `docs/` directory and will be expanded as development progresses.
+
+**Career OS — A centralized platform for managing the career journey.**

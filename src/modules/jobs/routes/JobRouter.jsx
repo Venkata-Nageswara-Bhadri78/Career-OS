@@ -1,7 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
 import JobDashboardPage from "../pages/JobDashboardPage";
-import AiIndex from "../../AiService/components/AiIndex";
+import AiIndex from "../../ai/components/AiIndex";
 
 export default function JobRouter() {
   return (

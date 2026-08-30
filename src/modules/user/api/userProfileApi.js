@@ -1,4 +1,4 @@
-import apiClient from "../../AuthService/api/apiClient";
+import apiClient from "../../auth/api/apiClient";
 import USER_PROFILE_ENDPOINTS from "./userProfileEndpoints";
 
 // Helper to extract data or return default for lists

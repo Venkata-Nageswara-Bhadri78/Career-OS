@@ -1,5 +1,5 @@
 import { API_BASE_URL, CHAT_ASSISTANT_ENDPOINTS } from "./chatAssistantEndpoints";
-import { getAuthorizationHeader } from "../../AuthService/api/tokenStorage";
+import { getAuthorizationHeader } from "../../auth/api/tokenStorage";
 
 class ApiError extends Error {
     constructor({ message, status, data }) {

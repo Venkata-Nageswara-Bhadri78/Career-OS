@@ -3,8 +3,8 @@ import ChatSidebar from "../components/main-components/ChatSidebar";
 import ChatInterface from "../components/main-components/ChatInterface";
 import ChatNavbar from "../components/main-components/ChatNavbar";
 import ChatJobBanner from "../components/main-components/ChatJobBanner";
-import JobDetailsDrawer from "../../JobService/components/main-components/JobDetailsDrawer";
-import jobApi from "../../JobService/api/jobApi";
+import JobDetailsDrawer from "../../jobs/components/main-components/JobDetailsDrawer";
+import jobApi from "../../jobs/api/jobApi";
 
 export default function ChatAssistantPage({ initialJobId = null }) {
   const [selectedJobId, setSelectedJobId] = useState(initialJobId);

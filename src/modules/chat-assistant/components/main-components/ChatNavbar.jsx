@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import authApi from "../../../AuthService/api/authApi";
+import authApi from "../../../auth/api/authApi";
 
 export default function ChatNavbar() {
   const navigate = useNavigate();

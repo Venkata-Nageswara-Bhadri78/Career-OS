@@ -4,7 +4,7 @@ import SkillsCell from "./SkillsCell";
 import { formatDate } from "../../helpers/jobFormatters";
 import jobApi from "../../api/jobApi";
 import JobSpinner from "../loaders/JobSpinner";
-import { copyToClipboard } from "../../../AiService/helpers/aiFormatters";
+import { copyToClipboard } from "../../../ai/helpers/aiFormatters";
 
 export default function JobDetailsDrawer({
   isOpen,

@@ -1,14 +1,14 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import AuthLayout from "./modules/AuthService/components/main-components/AuthLayout";
-import LoginPage from "./modules/AuthService/pages/LoginPage";
-import SignUpPage from "./modules/AuthService/pages/SignUpPage";
-import ForgotPasswordPage from "./modules/AuthService/pages/ForgotPasswordPage";
-import ResetPasswordPage from "./modules/AuthService/pages/ResetPasswordPage";
-import VerifyEmailPage from "./modules/AuthService/pages/VerifyEmailPage";
-import ProtectedRoute from "./modules/JobService/routes/ProtectedRoute";
-import JobIndex from "./modules/JobService/components/JobIndex";
-import ChatAssistantIndex from "./modules/ChatAssistant/components/ChatAssistantIndex";
-import UserProfileIndex from "./modules/UserProfileService/components/UserProfileIndex";
+import AuthLayout from "./modules/auth/components/main-components/AuthLayout";
+import LoginPage from "./modules/auth/pages/LoginPage";
+import SignUpPage from "./modules/auth/pages/SignUpPage";
+import ForgotPasswordPage from "./modules/auth/pages/ForgotPasswordPage";
+import ResetPasswordPage from "./modules/auth/pages/ResetPasswordPage";
+import VerifyEmailPage from "./modules/auth/pages/VerifyEmailPage";
+import ProtectedRoute from "./modules/jobs/routes/ProtectedRoute";
+import JobIndex from "./modules/jobs/components/JobIndex";
+import ChatAssistantIndex from "./modules/chat-assistant/components/ChatAssistantIndex";
+import UserProfileIndex from "./modules/user/components/UserProfileIndex";
 
 function App() {
   return (

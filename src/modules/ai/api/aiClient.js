@@ -1,5 +1,5 @@
 import { API_BASE_URL, AI_ENDPOINTS } from "./aiEndpoints";
-import { getAuthorizationHeader, getAccessToken } from "../../AuthService/api/tokenStorage";
+import { getAuthorizationHeader, getAccessToken } from "../../auth/api/tokenStorage";
 
 export class ApiError extends Error {
   constructor({ message, status, data }) {

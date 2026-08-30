@@ -2,12 +2,12 @@ import { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import AiNavbar from "../components/main-components/AiNavbar";
 import AiJobBanner from "../components/main-components/AiJobBanner";
-import JobDetailsDrawer from "../../JobService/components/main-components/JobDetailsDrawer";
+import JobDetailsDrawer from "../../jobs/components/main-components/JobDetailsDrawer";
 import AiChatSidebar from "../components/main-components/AiChatSidebar";
 import AiChatInterface from "../components/main-components/AiChatInterface";
 import AiChatSkeleton from "../components/skeletons/AiChatSkeleton";
 import aiApi from "../api/aiApi";
-import jobApi from "../../JobService/api/jobApi";
+import jobApi from "../../jobs/api/jobApi";
 import { AI_MODES, DEFAULT_AI_MODE } from "../helpers/aiModes";
 import { formatTime } from "../helpers/aiFormatters";
 

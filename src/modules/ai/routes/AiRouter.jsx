@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import ProtectedRoute from "../../JobService/routes/ProtectedRoute";
+import ProtectedRoute from "../../jobs/routes/ProtectedRoute";
 import AiChatPage from "../pages/AiChatPage";
 
 export default function AiRouter() {

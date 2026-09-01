@@ -9,6 +9,7 @@ import ProtectedRoute from "./modules/jobs/routes/ProtectedRoute";
 import JobIndex from "./modules/jobs/components/JobIndex";
 import ChatAssistantIndex from "./modules/chat-assistant/components/ChatAssistantIndex";
 import UserProfileIndex from "./modules/user/components/UserProfileIndex";
+import MainLayout from "./common/components/layout/MainLayout";
 
 function App() {
   return (
@@ -23,11 +24,13 @@ function App() {
         </Route>
 
         <Route element={<ProtectedRoute />}>
-          <Route path="/dashboard" element={<JobIndex />} />
-          <Route path="/profile" element={<UserProfileIndex />} />
-          <Route path="/jobs" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/jobs/:jobId/interact" element={<ChatAssistantIndex />} />
-          <Route path="/ai" element={<ChatAssistantIndex />} />
+          <Route element={<MainLayout />}>
+            <Route path="/dashboard" element={<JobIndex />} />
+            <Route path="/profile" element={<UserProfileIndex />} />
+            <Route path="/jobs" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/jobs/:jobId/interact" element={<ChatAssistantIndex />} />
+            <Route path="/ai" element={<ChatAssistantIndex />} />
+          </Route>
         </Route>
 
         <Route path="/" element={<Navigate to="/dashboard" replace />} />

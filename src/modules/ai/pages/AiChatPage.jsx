@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
-import AiNavbar from "../components/main-components/AiNavbar";
 import AiJobBanner from "../components/main-components/AiJobBanner";
 import JobDetailsDrawer from "../../jobs/components/main-components/JobDetailsDrawer";
 import AiChatSidebar from "../components/main-components/AiChatSidebar";
@@ -305,9 +304,7 @@ export default function AiChatPage() {
   };
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-white font-sans text-zinc-900 overflow-hidden select-none">
-      {/* 1. Global Independent Navbar */}
-      <AiNavbar />
+    <div className="h-full w-full flex flex-col bg-white font-sans text-zinc-900 overflow-hidden select-none rounded-xl border border-zinc-200 shadow-sm">
 
       {/* 2. Sub-Bar: Opportunity Brief & View Full Details trigger */}
       <AiJobBanner

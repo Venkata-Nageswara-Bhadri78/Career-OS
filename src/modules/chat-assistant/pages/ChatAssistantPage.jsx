@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import ChatSidebar from "../components/main-components/ChatSidebar";
 import ChatInterface from "../components/main-components/ChatInterface";
-import ChatNavbar from "../components/main-components/ChatNavbar";
 import ChatJobBanner from "../components/main-components/ChatJobBanner";
 import JobDetailsDrawer from "../../jobs/components/main-components/JobDetailsDrawer";
 import jobApi from "../../jobs/api/jobApi";
@@ -51,9 +50,7 @@ export default function ChatAssistantPage({ initialJobId = null }) {
   };
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-white font-sans text-zinc-900 overflow-hidden select-none">
-      <ChatNavbar />
-
+    <div className="h-full w-full flex flex-col bg-white font-sans text-zinc-900 overflow-hidden select-none rounded-xl border border-zinc-200 shadow-sm">
       <ChatJobBanner
         job={job}
         isLoading={isLoadingJob}

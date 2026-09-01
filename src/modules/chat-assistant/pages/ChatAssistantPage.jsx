@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import ChatSidebar from "../components/main-components/ChatSidebar";
 import ChatInterface from "../components/main-components/ChatInterface";
 import ChatJobBanner from "../components/main-components/ChatJobBanner";
 import JobDetailsDrawer from "../../jobs/components/main-components/JobDetailsDrawer";
@@ -9,7 +8,6 @@ export default function ChatAssistantPage({ initialJobId = null }) {
   const [selectedJobId, setSelectedJobId] = useState(initialJobId);
   const [job, setJob] = useState(null);
   const [isLoadingJob, setIsLoadingJob] = useState(Boolean(initialJobId));
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isJobModalOpen, setIsJobModalOpen] = useState(false);
 
   useEffect(() => {
@@ -58,43 +56,10 @@ export default function ChatAssistantPage({ initialJobId = null }) {
       />
 
       <div className="flex-1 flex overflow-hidden relative">
-        {isSidebarOpen && (
-          <div className="h-full shrink-0 relative z-20 hidden md:block">
-            <ChatSidebar 
-              currentJobId={selectedJobId} 
-              onSelectJob={handleSelectJob} 
-              onChatDeleted={handleChatDeleted}
-            />
-            <button
-              onClick={() => setIsSidebarOpen(false)}
-              className="absolute top-3 right-3 p-1 rounded-md text-zinc-400 hover:text-zinc-700 hover:bg-zinc-200 transition-colors bg-white/80"
-              title="Close Sidebar"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M19 12H5"></path>
-                <polyline points="12 19 5 12 12 5"></polyline>
-              </svg>
-            </button>
-          </div>
-        )}
-
-        {/* Mobile Sidebar overlay */}
-        {isSidebarOpen && (
-          <div className="md:hidden absolute inset-0 z-40 bg-black/20" onClick={() => setIsSidebarOpen(false)}>
-            <div className="h-full bg-white shadow-xl max-w-xs w-full" onClick={(e) => e.stopPropagation()}>
-              <ChatSidebar 
-                currentJobId={selectedJobId} 
-                onSelectJob={handleSelectJob} 
-                onChatDeleted={handleChatDeleted}
-              />
-            </div>
-          </div>
-        )}
-
         <ChatInterface 
           jobId={selectedJobId} 
-          isSidebarOpen={isSidebarOpen}
-          onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+          isSidebarOpen={true}
+          onToggleSidebar={() => {}}
         />
       </div>
 

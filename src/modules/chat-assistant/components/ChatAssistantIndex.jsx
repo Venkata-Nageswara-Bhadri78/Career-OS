@@ -7,5 +7,5 @@ export default function ChatAssistantIndex() {
   // Convert jobId string to number if present
   const parsedJobId = jobId ? parseInt(jobId, 10) : null;
 
-  return <ChatAssistantPage initialJobId={parsedJobId} />;
+  return <ChatAssistantPage key={parsedJobId || 'new'} initialJobId={parsedJobId} />;
 }

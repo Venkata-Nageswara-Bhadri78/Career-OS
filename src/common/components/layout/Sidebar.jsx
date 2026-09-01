@@ -1,10 +1,15 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import authApi from "../../../modules/auth/api/authApi";
+import ChatSidebar from "../../../modules/chat-assistant/components/main-components/ChatSidebar";
 
 export default function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
+  const [chatHistoryOpen, setChatHistoryOpen] = useState(false);
+
+  const match = location.pathname.match(/\/jobs\/(\d+)\/interact/);
+  const currentJobId = match ? parseInt(match[1], 10) : null;
 
   const handleLogout = async () => {
     try {
@@ -16,14 +21,13 @@ export default function Sidebar() {
 
   const navItems = [
     { name: "Dashboard", path: "/dashboard", icon: DashboardIcon },
-    { name: "AI Assistant", path: "/interact", icon: AIIcon },
-    { name: "Chat History", path: "/interact", icon: ChatIcon },
+    { name: "AI Assistant", path: "/ai", icon: AIIcon },
   ];
 
   return (
-    <aside className="w-64 flex flex-col bg-white border-r border-zinc-200/80 z-20 h-full">
+    <aside className="w-64 flex flex-col bg-white border border-zinc-200 rounded-2xl shadow-sm z-20 h-full overflow-hidden shrink-0">
       {/* Brand */}
-      <div className="h-16 flex items-center px-6 border-b border-zinc-200/80">
+      <div className="h-16 flex items-center px-6 border-b border-zinc-200/80 shrink-0">
         <div className="h-8 w-8 rounded-xl bg-black flex items-center justify-center text-white font-bold text-sm shadow-xs shrink-0">
           C
         </div>
@@ -34,37 +38,72 @@ export default function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1">
-        {navItems.map((item) => {
-          const isActive = location.pathname.startsWith(item.path);
-          return (
-            <Link
-              key={item.name}
-              to={item.path}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                isActive
-                  ? "bg-zinc-100 text-black shadow-sm"
-                  : "text-zinc-500 hover:text-black hover:bg-zinc-50"
-              }`}
-            >
-              <item.icon className={`h-4 w-4 ${isActive ? "text-black" : "text-zinc-400"}`} />
-              {item.name}
-            </Link>
-          );
-        })}
+      <nav className="flex-1 overflow-hidden py-6 px-4 flex flex-col gap-1">
+        <div>
+          {navItems.map((item) => {
+            const isActive = location.pathname.startsWith(item.path);
+            return (
+              <Link
+                key={item.name}
+                to={item.path}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all mb-1 ${
+                  isActive
+                    ? "bg-zinc-100 text-black shadow-sm"
+                    : "text-zinc-500 hover:text-black hover:bg-zinc-50"
+                }`}
+              >
+                <item.icon className={`h-4 w-4 ${isActive ? "text-black" : "text-zinc-400"}`} />
+                {item.name}
+              </Link>
+            );
+          })}
 
-        {/* Settings Button */}
+          <button
+            onClick={() => setChatHistoryOpen(!chatHistoryOpen)}
+            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+              chatHistoryOpen || location.pathname.includes("/interact")
+                ? "bg-zinc-100 text-black shadow-sm"
+                : "text-zinc-500 hover:text-black hover:bg-zinc-50"
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <ChatIcon className={`h-4 w-4 ${chatHistoryOpen || location.pathname.includes("/interact") ? "text-black" : "text-zinc-400"}`} />
+              Chat History
+            </div>
+            <svg 
+              className={`h-4 w-4 transition-transform ${chatHistoryOpen ? "rotate-180" : ""}`} 
+              fill="none" viewBox="0 0 24 24" stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Expandable Chat History Section */}
+        {chatHistoryOpen && (
+          <div className="flex-1 overflow-y-auto mt-2 -mx-2 px-2">
+            <ChatSidebar 
+              currentJobId={currentJobId}
+              onSelectJob={(jobId) => navigate(`/jobs/${jobId}/interact`)}
+              onChatDeleted={(jobId) => {
+                if (currentJobId === jobId) {
+                  navigate('/dashboard');
+                }
+              }}
+            />
+          </div>
+        )}
+      </nav>
+
+      {/* Footer / Logout */}
+      <div className="p-4 border-t border-zinc-200/80 space-y-1 shrink-0">
         <button
           onClick={() => alert("Development under process")}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-zinc-500 hover:text-black hover:bg-zinc-50 transition-all mt-6"
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-zinc-500 hover:text-black hover:bg-zinc-50 transition-all"
         >
           <SettingsIcon className="h-4 w-4 text-zinc-400" />
           Settings
         </button>
-      </nav>
-
-      {/* Footer / Logout */}
-      <div className="p-4 border-t border-zinc-200/80">
         <button
           onClick={handleLogout}
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition-all"

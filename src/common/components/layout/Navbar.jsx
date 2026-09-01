@@ -26,7 +26,7 @@ export default function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-30 w-full border-b border-zinc-200/80 bg-white/80 backdrop-blur-xl h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8">
+    <header className="w-full h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8 bg-transparent">
       {/* Left side (empty or for future breadcrumbs/title) */}
       <div className="flex items-center gap-2"></div>
 

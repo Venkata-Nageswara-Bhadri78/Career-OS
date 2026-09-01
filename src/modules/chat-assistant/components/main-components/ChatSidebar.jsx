@@ -53,11 +53,7 @@ export default function ChatSidebar({ currentJobId, onSelectJob, onChatDeleted }
   };
 
   return (
-    <div className="w-64 bg-zinc-50 border-r border-zinc-200 flex flex-col h-full shrink-0">
-      <div className="p-4 border-b border-zinc-200">
-        <h2 className="text-sm font-bold text-zinc-800">Job Conversations</h2>
-      </div>
-      
+    <div className="flex flex-col h-full overflow-hidden">
       <div className="flex-1 overflow-y-auto p-2 space-y-1">
         {isLoading ? (
           <div className="space-y-2 px-2 py-4">

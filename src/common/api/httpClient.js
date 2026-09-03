@@ -1,80 +1,150 @@
 import { API_BASE_URL } from "./apiConfig";
-import { getAuthorizationHeader, getAccessToken } from "../../modules/auth/api/tokenStorage";
+import { getAuthorizationHeader } from "../../modules/auth/api/tokenStorage";
+import { endSession, refreshSession } from "../../modules/auth/api/authSession";
+import { isAuthPublicEndpoint } from "../../modules/auth/api/authEndpoints";
+
+const CLIENT_COPY = Object.freeze({
+  timeout: "Request timed out. Please try again.",
+  network: "Unable to reach the server. Please try again.",
+  generic: "Something went wrong.",
+  unauthorized: "Your session has ended. Please sign in again.",
+});
 
 export class ApiError extends Error {
-  constructor({ message, status, data }) {
+  constructor({ message, status, data, retryAfter = null }) {
     super(message);
     this.name = "ApiError";
     this.status = status;
     this.data = data;
+    this.retryAfter = retryAfter;
   }
 }
 
 export function buildUrl(endpoint, query = {}) {
   const url = new URL(endpoint, API_BASE_URL);
-  Object.entries(query).forEach(([k, v]) => {
-    if (v !== undefined && v !== null && v !== "") {
-      Array.isArray(v) ? v.forEach((i) => url.searchParams.append(k, i)) : url.searchParams.append(k, v);
-    }
+  Object.entries(query).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === "") return;
+    if (Array.isArray(value)) value.forEach((item) => url.searchParams.append(key, item));
+    else url.searchParams.append(key, value);
   });
   return url.toString();
 }
 
-function resolveBearerToken() {
-  const authHeader = getAuthorizationHeader();
-  if (authHeader) return authHeader;
-
-  const rawToken =
-    getAccessToken() ||
-    localStorage.getItem("auth_access_token") ||
-    localStorage.getItem("accessToken") ||
-    localStorage.getItem("token") ||
-    localStorage.getItem("jwt") ||
-    sessionStorage.getItem("auth_access_token") ||
-    sessionStorage.getItem("accessToken") ||
-    sessionStorage.getItem("token");
-
-  if (!rawToken) return null;
-  const trimmed = String(rawToken).trim();
-  return trimmed.startsWith("Bearer ") || trimmed.startsWith("bearer ") ? trimmed : `Bearer ${trimmed}`;
+function parseRetryAfter(response, data) {
+  const header = response.headers.get("Retry-After");
+  if (header) {
+    const seconds = Number.parseInt(header, 10);
+    if (Number.isFinite(seconds)) return seconds;
+  }
+  const fromBody = data?.retryAfter ?? data?.data?.retryAfter;
+  return Number.isFinite(fromBody) ? fromBody : null;
 }
 
-export async function request({ endpoint, method = "GET", body = null, headers = {}, query = {}, timeout = 30000, signal }) {
+async function parseBody(response) {
+  const contentType = response.headers.get("content-type") ?? "";
+  if (contentType.includes("application/json")) {
+    return response.json().catch(() => null);
+  }
+  if (contentType.includes("text/")) {
+    return response.text().catch(() => null);
+  }
+  return null;
+}
+
+function toApiError(error, fallbackStatus = 500) {
+  if (error instanceof ApiError) return error;
+  if (error?.name === "AbortError") {
+    return new ApiError({ message: CLIENT_COPY.timeout, status: 408, data: null });
+  }
+  return new ApiError({
+    message: CLIENT_COPY.network,
+    status: fallbackStatus,
+    data: null,
+  });
+}
+
+function shouldRefresh(endpoint, skipRefresh, isRetry, status) {
+  if (skipRefresh || isRetry || status !== 401) return false;
+  return !isAuthPublicEndpoint(endpoint);
+}
+
+export async function request({
+  endpoint,
+  method = "GET",
+  body = null,
+  headers = {},
+  query = {},
+  timeout = 30000,
+  signal,
+  skipAuth = false,
+  skipRefresh = false,
+  isRetry = false,
+}) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeout);
-  const bearerToken = resolveBearerToken();
+  const bearerToken = skipAuth ? null : getAuthorizationHeader();
+  const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
 
   const reqHeaders = {
     Accept: "application/json",
-    "Content-Type": "application/json",
+    ...(isFormData ? {} : { "Content-Type": "application/json" }),
     ...(bearerToken ? { Authorization: bearerToken } : {}),
     ...headers,
   };
 
+  if (isFormData) {
+    delete reqHeaders["Content-Type"];
+  }
+
+  let serializedBody = null;
+  if (body !== null && body !== undefined) {
+    serializedBody = isFormData ? body : JSON.stringify(body);
+  }
+
   try {
-    const res = await fetch(buildUrl(endpoint, query), {
+    const response = await fetch(buildUrl(endpoint, query), {
       method,
       headers: reqHeaders,
-      body: body ? JSON.stringify(body) : null,
+      body: serializedBody,
       signal: signal ?? controller.signal,
     });
-    const data = await res.json().catch(() => null);
 
-    if (!res.ok) {
-      if (res.status === 403 || res.status === 401) {
+    const data = await parseBody(response);
+    if (response.ok) return data;
+
+    const retryAfter = parseRetryAfter(response, data);
+    const message = data?.message || response.statusText || CLIENT_COPY.generic;
+    const error = new ApiError({ message, status: response.status, data, retryAfter });
+
+    if (shouldRefresh(endpoint, skipRefresh, isRetry, response.status)) {
+      try {
+        await refreshSession();
+        return request({
+          endpoint,
+          method,
+          body,
+          headers,
+          query,
+          timeout,
+          signal,
+          skipAuth,
+          skipRefresh,
+          isRetry: true,
+        });
+      } catch {
+        endSession({ redirect: true });
         throw new ApiError({
-          message: data?.message || (res.status === 403 ? "Forbidden: You are not authorized or your session has expired." : "Unauthorized: Please log in again."),
-          status: res.status,
+          message: CLIENT_COPY.unauthorized,
+          status: 401,
           data,
+          retryAfter,
         });
       }
-      throw new ApiError({ message: data?.message || res.statusText, status: res.status, data });
     }
-    return data;
+
+    throw error;
   } catch (err) {
-    if (err instanceof ApiError) throw err;
-    if (err.name === "AbortError") throw new ApiError({ message: "Request timed out.", status: 408, data: null });
-    throw new ApiError({ message: err.message || "Network error occurred.", status: 500, data: null });
+    throw toApiError(err);
   } finally {
     clearTimeout(timer);
   }
@@ -86,5 +156,57 @@ export const put = (endpoint, body, options) => request({ endpoint, method: "PUT
 export const patch = (endpoint, body, options) => request({ endpoint, method: "PATCH", body, ...options });
 export const del = (endpoint, options) => request({ endpoint, method: "DELETE", ...options });
 
-const httpClient = { request, get, post, put, patch, delete: del, buildUrl };
+export async function upload(endpoint, formData, options = {}) {
+  return request({
+    endpoint,
+    method: options.method || "POST",
+    body: formData,
+    ...options,
+  });
+}
+
+export async function download(endpoint, options = {}) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), options.timeout ?? 30000);
+  const bearerToken = options.skipAuth ? null : getAuthorizationHeader();
+
+  try {
+    const response = await fetch(buildUrl(endpoint, options.query), {
+      method: options.method || "GET",
+      headers: {
+        ...(bearerToken ? { Authorization: bearerToken } : {}),
+        ...(options.headers ?? {}),
+      },
+      signal: options.signal ?? controller.signal,
+    });
+
+    if (response.status === 401 && !options.skipRefresh && !options.isRetry && !isAuthPublicEndpoint(endpoint)) {
+      try {
+        await refreshSession();
+        return download(endpoint, { ...options, isRetry: true });
+      } catch {
+        endSession({ redirect: true });
+        throw new ApiError({ message: CLIENT_COPY.unauthorized, status: 401, data: null });
+      }
+    }
+
+    if (!response.ok) {
+      const data = await parseBody(response);
+      throw new ApiError({
+        message: data?.message || response.statusText || CLIENT_COPY.generic,
+        status: response.status,
+        data,
+        retryAfter: parseRetryAfter(response, data),
+      });
+    }
+
+    return response;
+  } catch (err) {
+    throw toApiError(err);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+const httpClient = { request, get, post, put, patch, delete: del, upload, download, buildUrl };
 export default httpClient;

@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "../../auth/api/authEndpoints";
+import { API_BASE_URL } from "../../../common/api/apiConfig";
 
 export const USER_PROFILE_BASE_PATH = "/api/v1/users/profile";
 export const USER_RESUMES_BASE_PATH = "/api/v1/users/resumes";

@@ -1,11 +1,13 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import authApi from "../../../modules/auth/api/authApi";
+import { AUTH_PATHS } from "../../../modules/auth/config/authConfig";
+import { useAuth } from "../../../modules/auth/hooks/useAuth";
 import ChatSidebar from "../../../modules/chat-assistant/components/main-components/ChatSidebar";
 
 export default function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { signOut } = useAuth();
   const [chatHistoryOpen, setChatHistoryOpen] = useState(false);
 
   const match = location.pathname.match(/\/jobs\/(\d+)\/interact/);
@@ -13,9 +15,9 @@ export default function Sidebar() {
 
   const handleLogout = async () => {
     try {
-      await authApi.logout();
+      await signOut();
     } finally {
-      window.location.href = "/login";
+      navigate(AUTH_PATHS.LOGIN, { replace: true });
     }
   };
 
@@ -87,7 +89,8 @@ export default function Sidebar() {
       {/* Footer / Logout */}
       <div className="p-2 border-t border-zinc-200/80 space-y-0.5 shrink-0">
         <button
-          onClick={() => alert("Development under process")}
+          type="button"
+          onClick={() => navigate(AUTH_PATHS.SETTINGS)}
           className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium text-zinc-500 hover:text-black hover:bg-zinc-50 transition-all"
         >
           <SettingsIcon className="h-3.5 w-3.5 text-zinc-400" />

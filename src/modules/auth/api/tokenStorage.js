@@ -1,86 +1,166 @@
-export const STORAGE_KEYS = Object.freeze({
-    ACCESS_TOKEN: "auth_access_token",
-    REFRESH_TOKEN: "auth_refresh_token",
-    TOKEN_TYPE: "auth_token_type",
-});
+const ACCESS_KEY = "career_os_access_token";
+const REFRESH_KEY = "career_os_refresh_token";
+const TYPE_KEY = "career_os_token_type";
+const PERSIST_KEY = "career_os_persist_session";
 
-export const saveTokens = ({ accessToken, refreshToken, tokenType = "Bearer" }) => {
-    if (accessToken) {
-        localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, accessToken);
-        localStorage.setItem("accessToken", accessToken);
-        localStorage.setItem("token", accessToken);
-    }
-    if (refreshToken) {
-        localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, refreshToken);
-        localStorage.setItem("refreshToken", refreshToken);
-    }
-    localStorage.setItem(STORAGE_KEYS.TOKEN_TYPE, tokenType);
+const LEGACY_ACCESS_KEYS = [
+  "auth_access_token",
+  "accessToken",
+  "token",
+  "jwt",
+];
+const LEGACY_REFRESH_KEYS = ["auth_refresh_token", "refreshToken"];
+const LEGACY_TYPE_KEYS = ["auth_token_type"];
+
+let memoryAccessToken = null;
+let memoryRefreshToken = null;
+let memoryTokenType = "Bearer";
+
+function canUseStorage() {
+  try {
+    return typeof window !== "undefined" && !!window.sessionStorage && !!window.localStorage;
+  } catch {
+    return false;
+  }
+}
+
+function isPersistEnabled() {
+  if (!canUseStorage()) return false;
+  return localStorage.getItem(PERSIST_KEY) === "1";
+}
+
+export function isSessionPersisted() {
+  return isPersistEnabled();
+}
+
+function readFromStorages(key) {
+  if (!canUseStorage()) return null;
+  return sessionStorage.getItem(key) || localStorage.getItem(key);
+}
+
+function writeToken(key, value) {
+  if (!canUseStorage()) return;
+  const persist = isPersistEnabled();
+  const primary = persist ? localStorage : sessionStorage;
+  const secondary = persist ? sessionStorage : localStorage;
+  if (value) primary.setItem(key, value);
+  else primary.removeItem(key);
+  secondary.removeItem(key);
+}
+
+function removeEverywhere(key) {
+  if (!canUseStorage()) return;
+  sessionStorage.removeItem(key);
+  localStorage.removeItem(key);
+}
+
+function migrateLegacyTokens() {
+  if (!canUseStorage()) return;
+  const legacyAccess =
+    memoryAccessToken ||
+    LEGACY_ACCESS_KEYS.map((key) => localStorage.getItem(key) || sessionStorage.getItem(key)).find(Boolean);
+  const legacyRefresh =
+    memoryRefreshToken ||
+    LEGACY_REFRESH_KEYS.map((key) => localStorage.getItem(key) || sessionStorage.getItem(key)).find(Boolean);
+  const legacyType =
+    LEGACY_TYPE_KEYS.map((key) => localStorage.getItem(key) || sessionStorage.getItem(key)).find(Boolean) || "Bearer";
+
+  if (legacyAccess || legacyRefresh) {
+    if (legacyAccess) memoryAccessToken = legacyAccess;
+    if (legacyRefresh) memoryRefreshToken = legacyRefresh;
+    memoryTokenType = legacyType;
+    writeToken(ACCESS_KEY, memoryAccessToken);
+    writeToken(REFRESH_KEY, memoryRefreshToken);
+    writeToken(TYPE_KEY, memoryTokenType);
+  }
+
+  [...LEGACY_ACCESS_KEYS, ...LEGACY_REFRESH_KEYS, ...LEGACY_TYPE_KEYS].forEach(removeEverywhere);
+}
+
+migrateLegacyTokens();
+
+export function setPersistSession(persist) {
+  if (!canUseStorage()) return;
+  if (persist) localStorage.setItem(PERSIST_KEY, "1");
+  else localStorage.removeItem(PERSIST_KEY);
+
+  writeToken(ACCESS_KEY, memoryAccessToken);
+  writeToken(REFRESH_KEY, memoryRefreshToken);
+  writeToken(TYPE_KEY, memoryTokenType);
+}
+
+export const saveTokens = ({ accessToken, refreshToken, tokenType = "Bearer" } = {}, options = {}) => {
+  if (typeof options.persist === "boolean") {
+    setPersistSession(options.persist);
+  }
+  if (accessToken) memoryAccessToken = accessToken;
+  if (refreshToken) memoryRefreshToken = refreshToken;
+  if (tokenType) memoryTokenType = tokenType;
+  writeToken(ACCESS_KEY, memoryAccessToken);
+  writeToken(REFRESH_KEY, memoryRefreshToken);
+  writeToken(TYPE_KEY, memoryTokenType);
 };
 
 export const getAccessToken = () => {
-    return (
-        localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN) ||
-        localStorage.getItem("accessToken") ||
-        localStorage.getItem("token") ||
-        localStorage.getItem("jwt") ||
-        sessionStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN) ||
-        sessionStorage.getItem("accessToken") ||
-        sessionStorage.getItem("token") ||
-        null
-    );
+  if (memoryAccessToken) return memoryAccessToken;
+  const stored = readFromStorages(ACCESS_KEY);
+  if (stored) memoryAccessToken = stored;
+  return memoryAccessToken;
 };
 
 export const getRefreshToken = () => {
-    return (
-        localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN) ||
-        localStorage.getItem("refreshToken") ||
-        sessionStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN) ||
-        sessionStorage.getItem("refreshToken") ||
-        null
-    );
+  if (memoryRefreshToken) return memoryRefreshToken;
+  const stored = readFromStorages(REFRESH_KEY);
+  if (stored) memoryRefreshToken = stored;
+  return memoryRefreshToken;
 };
 
-export const getTokenType = () => localStorage.getItem(STORAGE_KEYS.TOKEN_TYPE) || "Bearer";
+export const getTokenType = () => {
+  if (memoryTokenType) return memoryTokenType;
+  memoryTokenType = readFromStorages(TYPE_KEY) || "Bearer";
+  return memoryTokenType;
+};
 
 export const getAuthorizationHeader = () => {
-    const token = getAccessToken();
-    if (!token) return null;
-    const trimmed = String(token).trim();
-    if (trimmed.startsWith("Bearer ") || trimmed.startsWith("bearer ")) {
-        return trimmed;
-    }
-    // return `${getTokenType()} ${trimmed}`;
-    return `Bearer ${trimmed}`;
+  const token = getAccessToken();
+  if (!token) return null;
+  const trimmed = String(token).trim();
+  if (!trimmed) return null;
+  if (/^bearer\s+/i.test(trimmed)) return `Bearer ${trimmed.replace(/^bearer\s+/i, "")}`;
+  return `Bearer ${trimmed}`;
 };
 
 export const isAuthenticated = () => Boolean(getAccessToken());
 export const hasRefreshToken = () => Boolean(getRefreshToken());
+export const hasSession = () => Boolean(getAccessToken() || getRefreshToken());
 
 export const removeAccessToken = () => {
-    localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("token");
-    localStorage.removeItem("jwt");
-    sessionStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
-    sessionStorage.removeItem("accessToken");
-    sessionStorage.removeItem("token");
+  memoryAccessToken = null;
+  removeEverywhere(ACCESS_KEY);
 };
 
 export const removeRefreshToken = () => {
-    localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
-    localStorage.removeItem("refreshToken");
-    sessionStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
-    sessionStorage.removeItem("refreshToken");
+  memoryRefreshToken = null;
+  removeEverywhere(REFRESH_KEY);
 };
 
 export const clearTokens = () => {
-    removeAccessToken();
-    removeRefreshToken();
-    localStorage.removeItem(STORAGE_KEYS.TOKEN_TYPE);
+  memoryAccessToken = null;
+  memoryRefreshToken = null;
+  memoryTokenType = "Bearer";
+  removeEverywhere(ACCESS_KEY);
+  removeEverywhere(REFRESH_KEY);
+  removeEverywhere(TYPE_KEY);
 };
 
 export const getStoredTokens = () => ({
-    accessToken: getAccessToken(),
-    refreshToken: getRefreshToken(),
-    tokenType: getTokenType(),
+  accessToken: getAccessToken(),
+  refreshToken: getRefreshToken(),
+  tokenType: getTokenType(),
+});
+
+export const STORAGE_KEYS = Object.freeze({
+  ACCESS_TOKEN: ACCESS_KEY,
+  REFRESH_TOKEN: REFRESH_KEY,
+  TOKEN_TYPE: TYPE_KEY,
 });

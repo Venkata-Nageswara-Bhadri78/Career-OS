@@ -1,9 +1,58 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&family=Oswald:wght@500;600;700&display=swap");
 @import "tailwindcss";
 
+:root {
+  --theme-bg: #ffffff;
+  --theme-ink: #0a0a0a;
+  --theme-accent: #c9a227;
+  --theme-muted: #6b7280;
+  --theme-line: #e5e7eb;
+  --theme-field: #f3f4f6;
+  --theme-danger: #b42318;
+  --theme-success: #027a48;
+  --font-sans: "Manrope", "Segoe UI", system-ui, sans-serif;
+  --font-display: "Oswald", "Arial Narrow", "Helvetica Neue", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--theme-bg);
+  color: var(--theme-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+@theme {
+  --color-bg: var(--theme-bg);
+  --color-ink: var(--theme-ink);
+  --color-accent: var(--theme-accent);
+  --color-muted: var(--theme-muted);
+  --color-line: var(--theme-line);
+  --color-field: var(--theme-field);
+  --color-danger: var(--theme-danger);
+  --color-success: var(--theme-success);
+  --font-sans: var(--font-sans);
+  --font-display: var(--font-display);
+  --font-mono: var(--font-mono);
+}
+
 .hide-scrollbar {
-    scrollbar-width: none;
+  scrollbar-width: none;
 }
 
 .hide-scrollbar::-webkit-scrollbar {
-    display: none;
+  display: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--theme-accent);
+  outline-offset: 2px;
 }

@@ -1,5 +1,5 @@
 import { API_BASE_URL, AI_ENDPOINTS } from "./aiEndpoints";
-import { getAuthorizationHeader, getAccessToken } from "../../auth/api/tokenStorage";
+import { getAuthorizationHeader } from "../../auth/api/tokenStorage";
 
 export class ApiError extends Error {
   constructor({ message, status, data }) {
@@ -25,23 +25,7 @@ export function resolveBearerToken(explicitToken = null) {
     const trimmed = String(explicitToken).trim();
     return trimmed.startsWith("Bearer ") || trimmed.startsWith("bearer ") ? trimmed : `Bearer ${trimmed}`;
   }
-
-  const authHeader = getAuthorizationHeader();
-  if (authHeader) return authHeader;
-
-  const rawToken =
-    getAccessToken() ||
-    localStorage.getItem("auth_access_token") ||
-    localStorage.getItem("accessToken") ||
-    localStorage.getItem("token") ||
-    localStorage.getItem("jwt") ||
-    sessionStorage.getItem("auth_access_token") ||
-    sessionStorage.getItem("accessToken") ||
-    sessionStorage.getItem("token");
-
-  if (!rawToken) return null;
-  const trimmed = String(rawToken).trim();
-  return trimmed.startsWith("Bearer ") || trimmed.startsWith("bearer ") ? trimmed : `Bearer ${trimmed}`;
+  return getAuthorizationHeader();
 }
 
 /**

@@ -1,161 +1,53 @@
-import apiClient from "../../auth/api/apiClient";
 import USER_PROFILE_ENDPOINTS from "./userProfileEndpoints";
+import { buildUrl, del, download, get, patch, post, put, upload } from "../../../common/api/httpClient";
 
-// Helper to extract data or return default for lists
 const extractDataOrDefault = (res, defaultVal = null) => res?.data ?? defaultVal;
 
 const UserProfileApi = {
-    // --- Profile ---
-    getProfile: async () => {
-        const res = await apiClient.protectedRequest({
-            endpoint: USER_PROFILE_ENDPOINTS.PROFILE,
-            method: "GET"
-        });
-        return extractDataOrDefault(res);
-    },
-    createProfile: async (data) => {
-        const res = await apiClient.protectedRequest({
-            endpoint: USER_PROFILE_ENDPOINTS.PROFILE,
-            method: "POST",
-            body: data
-        });
-        return extractDataOrDefault(res);
-    },
-    updateProfile: async (data) => {
-        const res = await apiClient.protectedRequest({
-            endpoint: USER_PROFILE_ENDPOINTS.PROFILE,
-            method: "PUT",
-            body: data
-        });
-        return extractDataOrDefault(res);
-    },
-    deleteProfile: async () => {
-        const res = await apiClient.protectedRequest({
-            endpoint: USER_PROFILE_ENDPOINTS.PROFILE,
-            method: "DELETE"
-        });
-        return extractDataOrDefault(res);
-    },
+  getProfile: async () => extractDataOrDefault(await get(USER_PROFILE_ENDPOINTS.PROFILE)),
+  createProfile: async (data) => extractDataOrDefault(await post(USER_PROFILE_ENDPOINTS.PROFILE, data)),
+  updateProfile: async (data) => extractDataOrDefault(await put(USER_PROFILE_ENDPOINTS.PROFILE, data)),
+  deleteProfile: async () => extractDataOrDefault(await del(USER_PROFILE_ENDPOINTS.PROFILE)),
 
-    // --- Work Experience ---
-    getExperiences: async () => {
-        const res = await apiClient.protectedRequest({ endpoint: USER_PROFILE_ENDPOINTS.EXPERIENCES, method: "GET" });
-        return extractDataOrDefault(res, []);
-    },
-    addExperience: async (data) => {
-        const res = await apiClient.protectedRequest({ endpoint: USER_PROFILE_ENDPOINTS.EXPERIENCES, method: "POST", body: data });
-        return extractDataOrDefault(res);
-    },
-    updateExperience: async (id, data) => {
-        const res = await apiClient.protectedRequest({ endpoint: `${USER_PROFILE_ENDPOINTS.EXPERIENCES}/${id}`, method: "PUT", body: data });
-        return extractDataOrDefault(res);
-    },
-    deleteExperience: async (id) => {
-        const res = await apiClient.protectedRequest({ endpoint: `${USER_PROFILE_ENDPOINTS.EXPERIENCES}/${id}`, method: "DELETE" });
-        return extractDataOrDefault(res);
-    },
+  getExperiences: async () => extractDataOrDefault(await get(USER_PROFILE_ENDPOINTS.EXPERIENCES), []),
+  addExperience: async (data) => extractDataOrDefault(await post(USER_PROFILE_ENDPOINTS.EXPERIENCES, data)),
+  updateExperience: async (id, data) =>
+    extractDataOrDefault(await put(`${USER_PROFILE_ENDPOINTS.EXPERIENCES}/${id}`, data)),
+  deleteExperience: async (id) => extractDataOrDefault(await del(`${USER_PROFILE_ENDPOINTS.EXPERIENCES}/${id}`)),
 
-    // --- Education ---
-    getEducations: async () => {
-        const res = await apiClient.protectedRequest({ endpoint: USER_PROFILE_ENDPOINTS.EDUCATIONS, method: "GET" });
-        return extractDataOrDefault(res, []);
-    },
-    addEducation: async (data) => {
-        const res = await apiClient.protectedRequest({ endpoint: USER_PROFILE_ENDPOINTS.EDUCATIONS, method: "POST", body: data });
-        return extractDataOrDefault(res);
-    },
-    updateEducation: async (id, data) => {
-        const res = await apiClient.protectedRequest({ endpoint: `${USER_PROFILE_ENDPOINTS.EDUCATIONS}/${id}`, method: "PUT", body: data });
-        return extractDataOrDefault(res);
-    },
-    deleteEducation: async (id) => {
-        const res = await apiClient.protectedRequest({ endpoint: `${USER_PROFILE_ENDPOINTS.EDUCATIONS}/${id}`, method: "DELETE" });
-        return extractDataOrDefault(res);
-    },
+  getEducations: async () => extractDataOrDefault(await get(USER_PROFILE_ENDPOINTS.EDUCATIONS), []),
+  addEducation: async (data) => extractDataOrDefault(await post(USER_PROFILE_ENDPOINTS.EDUCATIONS, data)),
+  updateEducation: async (id, data) =>
+    extractDataOrDefault(await put(`${USER_PROFILE_ENDPOINTS.EDUCATIONS}/${id}`, data)),
+  deleteEducation: async (id) => extractDataOrDefault(await del(`${USER_PROFILE_ENDPOINTS.EDUCATIONS}/${id}`)),
 
-    // --- Projects ---
-    getProjects: async () => {
-        const res = await apiClient.protectedRequest({ endpoint: USER_PROFILE_ENDPOINTS.PROJECTS, method: "GET" });
-        return extractDataOrDefault(res, []);
-    },
-    addProject: async (data) => {
-        const res = await apiClient.protectedRequest({ endpoint: USER_PROFILE_ENDPOINTS.PROJECTS, method: "POST", body: data });
-        return extractDataOrDefault(res);
-    },
-    updateProject: async (id, data) => {
-        const res = await apiClient.protectedRequest({ endpoint: `${USER_PROFILE_ENDPOINTS.PROJECTS}/${id}`, method: "PUT", body: data });
-        return extractDataOrDefault(res);
-    },
-    deleteProject: async (id) => {
-        const res = await apiClient.protectedRequest({ endpoint: `${USER_PROFILE_ENDPOINTS.PROJECTS}/${id}`, method: "DELETE" });
-        return extractDataOrDefault(res);
-    },
+  getProjects: async () => extractDataOrDefault(await get(USER_PROFILE_ENDPOINTS.PROJECTS), []),
+  addProject: async (data) => extractDataOrDefault(await post(USER_PROFILE_ENDPOINTS.PROJECTS, data)),
+  updateProject: async (id, data) => extractDataOrDefault(await put(`${USER_PROFILE_ENDPOINTS.PROJECTS}/${id}`, data)),
+  deleteProject: async (id) => extractDataOrDefault(await del(`${USER_PROFILE_ENDPOINTS.PROJECTS}/${id}`)),
 
-    // --- Additional Information ---
-    getAdditionalInfos: async () => {
-        const res = await apiClient.protectedRequest({ endpoint: USER_PROFILE_ENDPOINTS.ADDITIONAL_INFO, method: "GET" });
-        return extractDataOrDefault(res, []);
-    },
-    addAdditionalInfo: async (data) => {
-        const res = await apiClient.protectedRequest({ endpoint: USER_PROFILE_ENDPOINTS.ADDITIONAL_INFO, method: "POST", body: data });
-        return extractDataOrDefault(res);
-    },
-    updateAdditionalInfo: async (id, data) => {
-        const res = await apiClient.protectedRequest({ endpoint: `${USER_PROFILE_ENDPOINTS.ADDITIONAL_INFO}/${id}`, method: "PUT", body: data });
-        return extractDataOrDefault(res);
-    },
-    deleteAdditionalInfo: async (id) => {
-        const res = await apiClient.protectedRequest({ endpoint: `${USER_PROFILE_ENDPOINTS.ADDITIONAL_INFO}/${id}`, method: "DELETE" });
-        return extractDataOrDefault(res);
-    },
+  getAdditionalInfos: async () => extractDataOrDefault(await get(USER_PROFILE_ENDPOINTS.ADDITIONAL_INFO), []),
+  addAdditionalInfo: async (data) => extractDataOrDefault(await post(USER_PROFILE_ENDPOINTS.ADDITIONAL_INFO, data)),
+  updateAdditionalInfo: async (id, data) =>
+    extractDataOrDefault(await put(`${USER_PROFILE_ENDPOINTS.ADDITIONAL_INFO}/${id}`, data)),
+  deleteAdditionalInfo: async (id) => extractDataOrDefault(await del(`${USER_PROFILE_ENDPOINTS.ADDITIONAL_INFO}/${id}`)),
 
-    // --- Profile Links ---
-    getLinks: async () => {
-        const res = await apiClient.protectedRequest({ endpoint: USER_PROFILE_ENDPOINTS.LINKS, method: "GET" });
-        return extractDataOrDefault(res, []);
-    },
-    addLink: async (data) => {
-        const res = await apiClient.protectedRequest({ endpoint: USER_PROFILE_ENDPOINTS.LINKS, method: "POST", body: data });
-        return extractDataOrDefault(res);
-    },
-    updateLink: async (id, data) => {
-        const res = await apiClient.protectedRequest({ endpoint: `${USER_PROFILE_ENDPOINTS.LINKS}/${id}`, method: "PUT", body: data });
-        return extractDataOrDefault(res);
-    },
-    deleteLink: async (id) => {
-        const res = await apiClient.protectedRequest({ endpoint: `${USER_PROFILE_ENDPOINTS.LINKS}/${id}`, method: "DELETE" });
-        return extractDataOrDefault(res);
-    },
+  getLinks: async () => extractDataOrDefault(await get(USER_PROFILE_ENDPOINTS.LINKS), []),
+  addLink: async (data) => extractDataOrDefault(await post(USER_PROFILE_ENDPOINTS.LINKS, data)),
+  updateLink: async (id, data) => extractDataOrDefault(await put(`${USER_PROFILE_ENDPOINTS.LINKS}/${id}`, data)),
+  deleteLink: async (id) => extractDataOrDefault(await del(`${USER_PROFILE_ENDPOINTS.LINKS}/${id}`)),
 
-    // --- Resumes ---
-    getResumes: async () => {
-        const res = await apiClient.protectedRequest({ endpoint: USER_PROFILE_ENDPOINTS.RESUMES, method: "GET" });
-        return extractDataOrDefault(res, []);
-    },
-    uploadResume: async (file) => {
-        const formData = new FormData();
-        formData.append("file", file);
-        const res = await apiClient.upload(USER_PROFILE_ENDPOINTS.RESUMES, formData);
-        return extractDataOrDefault(res);
-    },
-    deleteResume: async (id) => {
-        const res = await apiClient.protectedRequest({ endpoint: `${USER_PROFILE_ENDPOINTS.RESUMES}/${id}`, method: "DELETE" });
-        return extractDataOrDefault(res);
-    },
-    setHighPriorityResume: async (id) => {
-        const res = await apiClient.protectedRequest({ endpoint: `${USER_PROFILE_ENDPOINTS.RESUMES}/${id}/high-priority`, method: "PATCH" });
-        return extractDataOrDefault(res);
-    },
-    downloadResumeUrl: (id) => {
-        // We will call apiClient.download which returns a Response object, 
-        // or just construct the URL and let the browser handle downloading using the token.
-        // Wait, apiClient.download uses fetch with the token.
-        // So we can do this:
-        return apiClient.buildUrl(`${USER_PROFILE_ENDPOINTS.RESUMES}/${id}`);
-    },
-    downloadResumeFetch: async (id) => {
-        return await apiClient.download(`${USER_PROFILE_ENDPOINTS.RESUMES}/${id}`);
-    }
+  getResumes: async () => extractDataOrDefault(await get(USER_PROFILE_ENDPOINTS.RESUMES), []),
+  uploadResume: async (file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return extractDataOrDefault(await upload(USER_PROFILE_ENDPOINTS.RESUMES, formData));
+  },
+  deleteResume: async (id) => extractDataOrDefault(await del(`${USER_PROFILE_ENDPOINTS.RESUMES}/${id}`)),
+  setHighPriorityResume: async (id) =>
+    extractDataOrDefault(await patch(`${USER_PROFILE_ENDPOINTS.RESUMES}/${id}/high-priority`)),
+  downloadResumeUrl: (id) => buildUrl(`${USER_PROFILE_ENDPOINTS.RESUMES}/${id}`),
+  downloadResumeFetch: async (id) => download(`${USER_PROFILE_ENDPOINTS.RESUMES}/${id}`),
 };
 
 export default UserProfileApi;

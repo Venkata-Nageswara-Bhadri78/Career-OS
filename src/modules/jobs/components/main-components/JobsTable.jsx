@@ -71,17 +71,17 @@ export default function JobsTable({
   }
 
   return (
-    <div className="relative w-full overflow-hidden rounded-2xl border border-zinc-200/80 bg-white/70 backdrop-blur-md shadow-xs">
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs border-collapse">
+    <div className="relative w-full h-full flex flex-col overflow-hidden bg-transparent">
+      <div className="overflow-x-auto flex-1">
+        <table className="w-full table-fixed text-left text-xs border-collapse">
           <thead>
             <tr className="border-b border-zinc-200/90 bg-zinc-50/80">
-              <th className="py-2.5 px-3.5 font-semibold text-zinc-500 w-[20%]">Role & Company</th>
-              <th className="py-2.5 px-3.5 font-semibold text-zinc-500 w-[12%]">Location</th>
-              <th className="py-2.5 px-3.5 font-semibold text-zinc-500 w-[14%]">Work Mode / Type</th>
-              <th className="py-2.5 px-3.5 font-semibold text-zinc-500 w-[14%]">Salary & Exp</th>
-              <th className="py-2.5 px-3.5 font-semibold text-zinc-500 w-[22%]">Skills</th>
-              <th className="py-2.5 px-3.5 font-semibold text-zinc-500 w-[18%] text-right">Actions</th>
+              <th className="py-2.5 px-2 font-semibold text-zinc-500 w-[20%]">Role & Company</th>
+              <th className="py-2.5 px-2 font-semibold text-zinc-500 w-[12%]">Location</th>
+              <th className="py-2.5 px-2 font-semibold text-zinc-500 w-[16%]">Work Mode / Type</th>
+              <th className="py-2.5 px-2 font-semibold text-zinc-500 w-[14%]">Salary & Exp</th>
+              <th className="py-2.5 px-2 font-semibold text-zinc-500 w-[20%]">Skills</th>
+              <th className="py-2.5 px-2 font-semibold text-zinc-500 w-[18%] text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-100/80">
@@ -92,8 +92,8 @@ export default function JobsTable({
                 className="group odd:bg-white even:bg-zinc-50/50 hover:bg-zinc-100/80! cursor-pointer transition-colors duration-150"
               >
                 {/* Title & Company */}
-                <td className="py-2 px-3.5 w-[20%] align-middle">
-                  <div className="flex flex-col">
+                <td className="py-2 px-2 w-[20%] align-middle max-w-0">
+                  <div className="flex flex-col w-full">
                     <InlineEditableCell
                       value={job.title}
                       onSave={(val) => handleUpdate(job.id, "title", jobApi.updateTitle, val, "Title")}
@@ -112,7 +112,7 @@ export default function JobsTable({
                 </td>
 
                 {/* Location */}
-                <td className="py-2 px-3.5 w-[12%] align-middle">
+                <td className="py-2 px-2 w-[12%] align-middle max-w-0">
                   <InlineEditableCell
                     value={job.location}
                     onSave={(val) => handleUpdate(job.id, "location", jobApi.updateLocation, val, "Location")}
@@ -123,8 +123,8 @@ export default function JobsTable({
                 </td>
 
                 {/* Work Mode & Employment Type (Custom Selection Style) */}
-                <td className="py-2 px-3.5 w-[14%] align-middle">
-                  <div className="flex flex-wrap gap-1.5 items-center">
+                <td className="py-2 px-2 w-[16%] align-middle max-w-0">
+                  <div className="flex flex-wrap gap-1 items-center w-full">
                     <InlineEditableCell
                       value={job.workMode}
                       onSave={(val) => handleUpdate(job.id, "workMode", jobApi.updateWorkMode, val, "Work Mode")}
@@ -145,8 +145,8 @@ export default function JobsTable({
                 </td>
 
                 {/* Salary & Experience */}
-                <td className="py-2 px-3.5 w-[14%] align-middle">
-                  <div className="flex flex-col">
+                <td className="py-2 px-2 w-[14%] align-middle max-w-0">
+                  <div className="flex flex-col w-full">
                     <InlineEditableCell
                       value={job.salary}
                       onSave={(val) => handleUpdate(job.id, "salary", jobApi.updateSalary, val, "Salary")}
@@ -165,7 +165,7 @@ export default function JobsTable({
                 </td>
 
                 {/* Skills */}
-                <td className="py-2 px-3.5 w-[22%] align-middle">
+                <td className="py-2 px-2 w-[20%] align-middle max-w-0">
                   <SkillsCell
                     skills={job.skills || []}
                     onSave={(val) => handleUpdate(job.id, "skills", jobApi.updateSkills, val, "Skills")}
@@ -173,8 +173,8 @@ export default function JobsTable({
                 </td>
 
                 {/* Actions & Interact */}
-                <td className="py-2 px-3.5 w-[18%] align-middle text-right" onClick={(e) => e.stopPropagation()}>
-                  <div className="inline-flex items-center gap-1.5 justify-end">
+                <td className="py-2 px-2 w-[18%] align-middle text-right" onClick={(e) => e.stopPropagation()}>
+                  <div className="inline-flex items-center gap-1 justify-end w-full">
                     <button
                       type="button"
                       onClick={() => navigate(`/jobs/${job.id}/interact`)}

@@ -8,15 +8,6 @@ export default function ChatJobBanner({ job, isLoading, onOpenDetails }) {
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-3 flex-nowrap">
         {/* Left Side: Back & Opportunity Brief (Single Line) */}
         <div className="flex items-center gap-2.5 min-w-0 flex-nowrap shrink">
-          <button
-            type="button"
-            onClick={() => navigate("/dashboard")}
-            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg border border-zinc-200 bg-zinc-50 text-zinc-700 hover:bg-zinc-100 hover:text-black transition-colors shrink-0"
-          >
-            ← Back
-          </button>
-
-          <div className="h-4 w-px bg-zinc-200 shrink-0 hidden sm:block" />
 
           {isLoading ? (
             <div className="flex items-center gap-2 shrink-0">

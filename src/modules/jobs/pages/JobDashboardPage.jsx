@@ -1,140 +1,158 @@
-import { useState, useEffect, useRef, startTransition } from "react";
-import JobsTable from "../components/main-components/JobsTable";
-import AddJobModal from "../../job-extraction/components/main-components/AddJobModal";
+import { useCallback, useEffect, useState, startTransition } from "react";
+import "../styles/jobs.css";
+import JobsToolbar from "../components/sub-components/JobsToolbar";
+import JobsBoard from "../components/main-components/JobsBoard";
 import DeleteConfirmModal from "../components/main-components/DeleteConfirmModal";
 import JobDetailsDrawer from "../components/main-components/JobDetailsDrawer";
 import SuccessSnackbar from "../components/main-components/SuccessSnackbar";
 import JobTableSkeleton from "../components/skeletons/JobTableSkeleton";
-import jobApi from "../api/jobApi";
+import useJobsList from "../hooks/useJobsList";
+import useJobsViewMode, { useDismissibleMessage } from "../hooks/useJobsViewMode";
+import useJobFieldUpdate, { useJobCreate, useJobDelete } from "../hooks/useJobMutations";
 
-export default function JobDashboardPage() {
-  const [jobs, setJobs] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [page, setPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalElements, setTotalElements] = useState(0);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+export default function JobDashboardPage({ onAddJob, registerCreateJob }) {
+  const {
+    jobs,
+    page,
+    totalPages,
+    totalElements,
+    isLoading,
+    error,
+    retryAfter,
+    searchInput,
+    sortBy,
+    sortDir,
+    workModeFilter,
+    employmentTypeFilter,
+    clientFiltersActive,
+    handleSearchChange,
+    handleSortChange,
+    toggleSortDir,
+    handleWorkModeFilterChange,
+    handleEmploymentTypeFilterChange,
+    clearFilters,
+    handlePageChange,
+    upsertJobInList,
+    removeJobFromList,
+    prependJob,
+  } = useJobsList();
+
+  const { viewMode, setViewMode } = useJobsViewMode();
+  const { message: successMessage, showMessage, dismiss: dismissSuccessToast } = useDismissibleMessage();
+  const { createJob } = useJobCreate();
+  const { deleteJob } = useJobDelete();
+
   const [jobToDelete, setJobToDelete] = useState(null);
   const [selectedJobId, setSelectedJobId] = useState(null);
-  const [successMessage, setSuccessMessage] = useState(null);
-  const toastTimerRef = useRef(null);
+  const [updateError, setUpdateError] = useState(null);
 
-  useEffect(() => {
-    let ignore = false;
-    async function loadData() {
+  const handleJobUpdated = useCallback(
+    (updatedJob) => {
+      upsertJobInList(updatedJob);
+    },
+    [upsertJobInList]
+  );
+
+  const { handleUpdate, handleUndo, undoState, clearUndo } = useJobFieldUpdate(handleJobUpdated);
+
+  const onFieldUpdate = useCallback(
+    async (job, fieldKey, updateFn, newValue, label) => {
+      setUpdateError(null);
       try {
-        setIsLoading(true);
-        const res = await jobApi.getJobs({
-          page,
-          size: 10,
-          sortBy: "createdAt",
-          sortDir: "desc",
-        });
-
-        if (!ignore) {
-          const content = res?.content || (Array.isArray(res) ? res : []);
-          setJobs(content);
-          setTotalPages(res?.totalPages ?? 1);
-          setTotalElements(res?.totalElements ?? content.length);
-        }
-      } catch {
-        if (!ignore) setJobs([]);
-      } finally {
-        if (!ignore) setIsLoading(false);
+        await handleUpdate(job, fieldKey, updateFn, newValue, label);
+      } catch (err) {
+        setUpdateError(err?.message || `Failed to update ${label}.`);
       }
-    }
-
-    loadData();
-    return () => {
-      ignore = true;
-    };
-  }, [page]);
-
-  const handleCreateJob = async (jobPayload) => {
-    const created = await jobApi.createJob(jobPayload);
-    startTransition(() => {
-      setJobs((prev) => [created, ...prev]);
-      setTotalElements((prev) => prev + 1);
-    });
-    showSuccessToast("Job added successfully.");
-  };
-
-  const showSuccessToast = (message) => {
-    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
-    setSuccessMessage(message);
-    toastTimerRef.current = setTimeout(() => setSuccessMessage(null), 3500);
-  };
-
-  const dismissSuccessToast = () => {
-    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
-    setSuccessMessage(null);
-  };
-
-  useEffect(() => {
-    return () => {
-      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
-    };
-  }, []);
+    },
+    [handleUpdate]
+  );
 
   const handleDeleteJob = async (jobId) => {
-    await jobApi.deleteJob(jobId);
+    await deleteJob(jobId);
     startTransition(() => {
-      setJobs((prev) => prev.filter((j) => j.id !== jobId));
-      setTotalElements((prev) => Math.max(0, prev - 1));
+      removeJobFromList(jobId);
+      if (selectedJobId === jobId) setSelectedJobId(null);
     });
+    showMessage("Job deleted successfully.");
   };
 
-  const handleJobFieldUpdated = (updatedJob) => {
-    if (!updatedJob?.id) return;
-    setJobs((prev) => prev.map((j) => (j.id === updatedJob.id ? { ...j, ...updatedJob } : j)));
-  };
+  const handleCreateJob = useCallback(
+    async (jobPayload) => {
+      const created = await createJob(jobPayload);
+      startTransition(() => {
+        prependJob(created);
+      });
+      showMessage("Job added successfully.");
+      return created;
+    },
+    [createJob, prependJob, showMessage]
+  );
+
+  useEffect(() => {
+    if (registerCreateJob) registerCreateJob(handleCreateJob);
+  }, [registerCreateJob, handleCreateJob]);
 
   return (
     <>
-      <div className="w-full h-full flex flex-col p-2 gap-2">
-        {/* Header Title */}
-        <div className="flex items-center justify-between px-2 pt-2 shrink-0">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900">Tracked Opportunities</h1>
-            <p className="text-xs text-zinc-500 mt-0.5">
-              Manage, edit, and interact with your saved job postings with instant auto-save.
+      <div className="jobs-panel w-full h-full flex flex-col p-2 sm:p-3 gap-2 min-h-0 overflow-hidden">
+        <div className="flex items-start justify-between gap-3 shrink-0 px-1">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-ink">Job Tracker</h1>
+            <p className="text-xs text-muted mt-0.5">
+              Track and manage saved job postings with inline edits and instant auto-save.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => setIsAddModalOpen(true)}
-            className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-xl bg-black text-white hover:bg-zinc-800 active:scale-[0.98] transition-all shadow-xs shrink-0"
-          >
-            <span className="text-lg leading-none">+</span>
-            <span>Add Job</span>
-          </button>
         </div>
 
-        {/* Table Area */}
-        <div className="flex-1 min-h-0 overflow-hidden relative">
-        {isLoading ? (
-          <JobTableSkeleton rows={6} />
-        ) : (
-          <JobsTable
-            jobs={jobs}
-            page={page}
-            totalPages={totalPages}
-            totalElements={totalElements}
-            onPageChange={(newPage) => setPage(newPage)}
-            onDeleteClick={(job) => setJobToDelete(job)}
-            onViewClick={(jobId) => setSelectedJobId(jobId)}
-            onJobFieldUpdated={handleJobFieldUpdated}
-          />
-        )}
+        <JobsToolbar
+          searchInput={searchInput}
+          onSearchChange={handleSearchChange}
+          sortBy={sortBy}
+          sortDir={sortDir}
+          onSortChange={handleSortChange}
+          onToggleSortDir={toggleSortDir}
+          workModeFilter={workModeFilter}
+          employmentTypeFilter={employmentTypeFilter}
+          onWorkModeFilterChange={handleWorkModeFilterChange}
+          onEmploymentTypeFilterChange={handleEmploymentTypeFilterChange}
+          onClearFilters={clearFilters}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+          onAddJob={onAddJob}
+          clientFiltersActive={clientFiltersActive}
+        />
+
+        <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+          {isLoading ? (
+            <JobTableSkeleton rows={6} viewMode={viewMode} />
+          ) : error ? (
+            <div className="flex-1 flex items-center justify-center p-8">
+              <div className="max-w-md text-center rounded-2xl border border-line bg-white p-6">
+                <p className="text-sm font-semibold text-ink">Unable to load jobs</p>
+                <p className="text-xs text-muted mt-2" role="alert">
+                  {error}
+                </p>
+                {retryAfter ? (
+                  <p className="text-xs text-muted mt-1">Try again in {retryAfter} seconds.</p>
+                ) : null}
+              </div>
+            </div>
+          ) : (
+            <JobsBoard
+              jobs={jobs}
+              viewMode={viewMode}
+              page={page}
+              totalPages={totalPages}
+              totalElements={totalElements}
+              onPageChange={handlePageChange}
+              onViewClick={setSelectedJobId}
+              onDeleteClick={setJobToDelete}
+              onUpdate={onFieldUpdate}
+              updateError={updateError}
+            />
+          )}
         </div>
       </div>
-
-      {/* Modals & Slide-Over Drawers */}
-      <AddJobModal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        onSubmit={handleCreateJob}
-      />
 
       <DeleteConfirmModal
         isOpen={Boolean(jobToDelete)}
@@ -147,10 +165,39 @@ export default function JobDashboardPage() {
         isOpen={Boolean(selectedJobId)}
         jobId={selectedJobId}
         onClose={() => setSelectedJobId(null)}
-        onJobUpdated={handleJobFieldUpdated}
+        onJobUpdated={handleJobUpdated}
       />
 
       <SuccessSnackbar message={successMessage} onDismiss={dismissSuccessToast} />
+
+      {undoState ? (
+        <div className="fixed top-6 right-6 z-50 flex items-center gap-3 px-3.5 py-2 rounded-xl bg-ink/90 text-white text-xs shadow-2xl">
+          <span className="h-2 w-2 rounded-full bg-accent shrink-0" />
+          <span className="font-medium">Updated {undoState.label}</span>
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                await handleUndo();
+              } catch (err) {
+                setUpdateError(err?.message || "Failed to undo change.");
+              }
+            }}
+            className="px-2.5 py-1 text-xs font-bold rounded-lg bg-white text-ink hover:bg-field active:scale-95 transition-all"
+          >
+            Undo
+          </button>
+          <button
+            type="button"
+            onClick={clearUndo}
+            className="px-1 text-ink bg-white transition-colors rounded-full"
+            title="Dismiss"
+            aria-label="Dismiss undo notification"
+          >
+            ✕
+          </button>
+        </div>
+      ) : null}
     </>
   );
 }

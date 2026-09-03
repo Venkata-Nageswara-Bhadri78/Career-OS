@@ -1,10 +1,14 @@
 import { useState, useEffect } from "react";
 import InlineEditableCell from "./InlineEditableCell";
-import SkillsCell from "./SkillsCell";
-import { formatDate } from "../../helpers/jobFormatters";
+import { JobSkillsField } from "../common/JobSkillsField";
+import { formatDate, copyToClipboard, isSafeHttpUrl } from "../../utils/formatters";
+import { mergeJobSummary } from "../../mappers/jobMapper";
 import jobApi from "../../api/jobApi";
 import Spinner from "../../../../common/components/loaders/Spinner";
-import { copyToClipboard } from "../../../ai/helpers/aiFormatters";
+import {
+  JOBS_EMPLOYMENT_TYPE_PRESETS,
+  JOBS_WORK_MODE_PRESETS,
+} from "../../config/jobsConfig";
 
 export default function JobDetailsDrawer({
   isOpen,
@@ -63,11 +67,11 @@ export default function JobDetailsDrawer({
     if (!job) return;
     try {
       const updated = await fieldUpdater(job.id, val);
-      const merged = { ...job, [fieldKey]: val };
+      const merged = mergeJobSummary(job, { ...updated, [fieldKey]: updated?.[fieldKey] ?? val });
       setJob(merged);
-      if (onJobUpdated) onJobUpdated(updated || merged);
-    } catch (err) {
-      console.error(`Failed to update ${fieldKey}:`, err);
+      if (onJobUpdated) onJobUpdated(merged);
+    } catch {
+      setError(`Failed to update ${fieldKey}.`);
     }
   };
 
@@ -85,7 +89,7 @@ export default function JobDetailsDrawer({
       <div className="absolute inset-0" onClick={onClose} />
 
       <div className="absolute inset-y-0 right-0 max-w-full flex pl-6 sm:pl-10">
-        <div className="w-screen max-w-xl bg-white border-l border-zinc-200 shadow-2xl p-6 flex flex-col justify-between overflow-y-auto overflow-x-hidden animate-in slide-in-from-right duration-250 ease-out">
+        <div className="w-screen max-w-xl bg-white border-l border-zinc-200 shadow-2xl p-6 flex flex-col justify-between overflow-y-auto overflow-x-hidden hide-scrollbar animate-in slide-in-from-right duration-250 ease-out">
           <div className="min-w-0">
             {/* Header */}
             <div className="flex items-start justify-between pb-4 border-b border-zinc-100 min-w-0">
@@ -174,7 +178,7 @@ export default function JobDetailsDrawer({
                       onSave={(val) => handleFieldUpdate(jobApi.updateWorkMode, val, "workMode")}
                       fieldLabel="Work Mode"
                       type="select"
-                      options={["Remote", "Hybrid", "On-site"]}
+                      options={JOBS_WORK_MODE_PRESETS}
                       placeholder="Select Mode"
                     />
                   </div>
@@ -188,7 +192,7 @@ export default function JobDetailsDrawer({
                       onSave={(val) => handleFieldUpdate(jobApi.updateEmploymentType, val, "employmentType")}
                       fieldLabel="Employment Type"
                       type="select"
-                      options={["Full Time", "Part Time", "Contract", "Internship"]}
+                      options={JOBS_EMPLOYMENT_TYPE_PRESETS}
                       placeholder="Select Type"
                     />
                   </div>
@@ -268,12 +272,27 @@ export default function JobDetailsDrawer({
                     <span className="text-[10px] text-zinc-400">Click + Add or × to edit</span>
                   </div>
                   <div className="p-3 rounded-2xl bg-zinc-50/70 border border-zinc-200/70 w-full">
-                    <SkillsCell
-                      skills={job.skills || []}
-                      onSave={(newSkills) => handleFieldUpdate(jobApi.updateSkills, newSkills, "skills")}
-                      className="max-h-48 overflow-y-auto w-full gap-2"
+                    <JobSkillsField
+                      job={job}
+                      onUpdate={(_job, _fieldKey, updateFn, val) => handleFieldUpdate(updateFn, val, "skills")}
+                      maxRows={4}
                     />
                   </div>
+                </div>
+
+                {/* Original description */}
+                <div className="w-full min-w-0">
+                  <h4 className="text-xs font-bold text-zinc-900 mb-2">Original Posting</h4>
+                  <textarea
+                    value={job.originalDescription || ""}
+                    onChange={(e) => setJob((prev) => ({ ...prev, originalDescription: e.target.value }))}
+                    onBlur={(e) =>
+                      handleFieldUpdate(jobApi.updateOriginalDescription, e.target.value, "originalDescription")
+                    }
+                    rows={4}
+                    placeholder="Original pasted job text..."
+                    className="w-full p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80 focus:bg-white focus:border-black focus:outline-none transition-all text-xs text-zinc-800 leading-relaxed resize-y wrap-break-word min-w-0"
+                  />
                 </div>
 
                 {/* Editable Job Description (No Horizontal Overflow) */}
@@ -311,16 +330,16 @@ export default function JobDetailsDrawer({
                 <div className="pt-3 border-t border-zinc-100 flex flex-col gap-1.5 min-w-0">
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-zinc-500 font-medium">Source URL</span>
-                    {job.sourceUrl && (
+                    {isSafeHttpUrl(job.sourceUrl) ? (
                       <a
                         href={job.sourceUrl}
                         target="_blank"
-                        rel="noreferrer"
-                        className="text-xs font-semibold text-black hover:underline inline-flex items-center gap-1 shrink-0"
+                        rel="noopener noreferrer"
+                        className="text-xs font-semibold text-ink hover:underline inline-flex items-center gap-1 shrink-0"
                       >
                         <span>Open ↗</span>
                       </a>
-                    )}
+                    ) : null}
                   </div>
                   <InlineEditableCell
                     value={job.sourceUrl}

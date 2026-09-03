@@ -1,5 +1,5 @@
 import JOB_EXTRACTION_ENDPOINTS from "./jobExtractionEndpoints";
-import { post } from "./jobClient";
+import { post } from "./jobExtractionClient";
 
 const unwrap = (res) => {
   if (res && res.success === false) throw new Error(res.message || "API request failed");

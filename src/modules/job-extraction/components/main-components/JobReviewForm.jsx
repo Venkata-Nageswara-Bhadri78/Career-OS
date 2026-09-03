@@ -1,5 +1,5 @@
 import { useState } from "react";
-import JobSpinner from "../loaders/JobSpinner";
+import Spinner from "../loaders/Spinner";
 import SkillsTagEditor from "./SkillsTagEditor";
 
 const EMPLOYMENT_TYPE_OPTIONS = ["Full Time", "Part Time", "Contract", "Internship"];
@@ -261,7 +261,7 @@ export default function JobReviewForm({
         >
           {isSubmitting ? (
             <>
-              <JobSpinner className="h-3.5 w-3.5 text-white" />
+              <Spinner className="h-3.5 w-3.5 text-white" />
               <span>Adding…</span>
             </>
           ) : (

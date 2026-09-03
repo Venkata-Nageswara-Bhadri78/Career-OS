@@ -1,4 +1,4 @@
-import JobSpinner from "../loaders/JobSpinner";
+import Spinner from "../loaders/Spinner";
 
 const MAX_TEXT_LENGTH = 50000;
 
@@ -93,7 +93,7 @@ export default function ExtractJobForm({
         >
           {isLoading ? (
             <>
-              <JobSpinner className="h-3.5 w-3.5 text-white" />
+              <Spinner className="h-3.5 w-3.5 text-white" />
               <span>Extracting…</span>
             </>
           ) : isLocked ? (

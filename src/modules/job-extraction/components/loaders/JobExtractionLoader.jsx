@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import JobSpinner from "./JobSpinner";
+import Spinner from "./Spinner";
 
 const STAGES = [
   "Reading the pasted posting…",
@@ -23,7 +23,7 @@ export default function JobExtractionLoader() {
       <div className="relative h-16 w-16 flex items-center justify-center mb-6">
         <div className="absolute inset-0 rounded-2xl bg-black/5 animate-ping" />
         <div className="relative h-16 w-16 rounded-2xl bg-black flex items-center justify-center shadow-lg">
-          <JobSpinner className="h-7 w-7 text-white" />
+          <Spinner className="h-7 w-7 text-white" />
         </div>
       </div>
 
@@ -53,7 +53,7 @@ export default function JobExtractionLoader() {
             {idx < stageIndex ? (
               <span className="shrink-0">✓</span>
             ) : idx === stageIndex ? (
-              <JobSpinner className="h-3 w-3 text-white shrink-0" />
+              <Spinner className="h-3 w-3 text-white shrink-0" />
             ) : (
               <span className="h-1 w-1 rounded-full bg-zinc-300 shrink-0" />
             )}

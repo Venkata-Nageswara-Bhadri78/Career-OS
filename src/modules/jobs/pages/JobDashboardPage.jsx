@@ -91,9 +91,9 @@ export default function JobDashboardPage() {
 
   return (
     <>
-      <div className="w-full h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      <div className="w-full h-full flex flex-col p-2 gap-2">
         {/* Header Title */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between px-2 pt-2 shrink-0">
           <div>
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900">Tracked Opportunities</h1>
             <p className="text-xs text-zinc-500 mt-0.5">
@@ -111,6 +111,7 @@ export default function JobDashboardPage() {
         </div>
 
         {/* Table Area */}
+        <div className="flex-1 min-h-0 overflow-hidden relative">
         {isLoading ? (
           <JobTableSkeleton rows={6} />
         ) : (
@@ -125,6 +126,7 @@ export default function JobDashboardPage() {
             onJobFieldUpdated={handleJobFieldUpdated}
           />
         )}
+        </div>
       </div>
 
       {/* Modals & Slide-Over Drawers */}

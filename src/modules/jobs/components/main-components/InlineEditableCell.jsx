@@ -183,8 +183,8 @@ export default function InlineEditableCell({
   return (
     <div
       onClick={handleStartEdit}
-      title={`Click to edit ${fieldLabel}`}
-      className={`group relative inline-flex items-center gap-1.5 cursor-pointer rounded px-1.5 py-0.5 -mx-1.5 hover:bg-zinc-100/90 transition-colors duration-150 ${className}`}
+      title={value ? String(value) : `Click to edit ${fieldLabel}`}
+      className={`group relative inline-flex items-center gap-1.5 cursor-pointer rounded px-1.5 py-0.5 -mx-1.5 hover:bg-zinc-100/90 transition-colors duration-150 overflow-hidden w-full ${className}`}
     >
       <span className={`truncate text-xs ${!value ? "text-zinc-400 italic" : textClassName}`}>
         {value || placeholder}

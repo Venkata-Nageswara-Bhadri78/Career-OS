@@ -25,20 +25,9 @@ export default function Sidebar() {
   ];
 
   return (
-    <aside className="w-64 flex flex-col bg-white border border-zinc-200 rounded-2xl shadow-sm z-20 h-full overflow-hidden shrink-0">
-      {/* Brand */}
-      <div className="h-16 flex items-center px-6 border-b border-zinc-200/80 shrink-0">
-        <div className="h-8 w-8 rounded-xl bg-black flex items-center justify-center text-white font-bold text-sm shadow-xs shrink-0">
-          C
-        </div>
-        <div className="ml-3">
-          <span className="font-bold text-sm text-zinc-900 tracking-tight block leading-tight">Career OS</span>
-          <span className="text-[10px] text-zinc-400 font-medium">Job Management</span>
-        </div>
-      </div>
-
+    <aside className="w-56 flex flex-col bg-white border border-zinc-200 rounded-xl shadow-sm z-20 h-full overflow-hidden shrink-0 relative group">
       {/* Navigation */}
-      <nav className="flex-1 overflow-hidden py-6 px-4 flex flex-col gap-1">
+      <nav className="flex-1 overflow-hidden p-2 flex flex-col gap-1">
         <div>
           {navItems.map((item) => {
             const isActive = location.pathname.startsWith(item.path);
@@ -96,19 +85,19 @@ export default function Sidebar() {
       </nav>
 
       {/* Footer / Logout */}
-      <div className="p-4 border-t border-zinc-200/80 space-y-1 shrink-0">
+      <div className="p-2 border-t border-zinc-200/80 space-y-0.5 shrink-0">
         <button
           onClick={() => alert("Development under process")}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-zinc-500 hover:text-black hover:bg-zinc-50 transition-all"
+          className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium text-zinc-500 hover:text-black hover:bg-zinc-50 transition-all"
         >
-          <SettingsIcon className="h-4 w-4 text-zinc-400" />
+          <SettingsIcon className="h-3.5 w-3.5 text-zinc-400" />
           Settings
         </button>
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition-all"
+          className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition-all"
         >
-          <LogoutIcon className="h-4 w-4" />
+          <LogoutIcon className="h-3.5 w-3.5" />
           Logout
         </button>
       </div>

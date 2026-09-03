@@ -1,5 +1,5 @@
 import { useState } from "react";
-import Spinner from "../loaders/Spinner";
+import Spinner from "../../../../common/components/loaders/Spinner";
 import SkillsTagEditor from "./SkillsTagEditor";
 
 const EMPLOYMENT_TYPE_OPTIONS = ["Full Time", "Part Time", "Contract", "Internship"];

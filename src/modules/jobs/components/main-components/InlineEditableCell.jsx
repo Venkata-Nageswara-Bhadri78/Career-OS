@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import JobSpinner from "../loaders/JobSpinner";
+import Spinner from "../../../../common/components/loaders/Spinner";
 
 export default function InlineEditableCell({
   value = "",
@@ -114,7 +114,7 @@ export default function InlineEditableCell({
         >
           <span className="truncate">{currentLabel}</span>
           {isSaving ? (
-            <JobSpinner className="h-2.5 w-2.5 text-zinc-700 shrink-0" />
+            <Spinner className="h-2.5 w-2.5 text-zinc-700 shrink-0" />
           ) : (
             <svg
               className={`h-3 w-3 text-zinc-400 group-hover:text-zinc-900 transition-transform duration-150 shrink-0 ${
@@ -189,7 +189,7 @@ export default function InlineEditableCell({
       <span className={`truncate text-xs ${!value ? "text-zinc-400 italic" : textClassName}`}>
         {value || placeholder}
       </span>
-      {isSaving && <JobSpinner className="h-3 w-3 text-zinc-600 shrink-0" />}
+      {isSaving && <Spinner className="h-3 w-3 text-zinc-600 shrink-0" />}
       {justSaved && (
         <svg className="h-3 w-3 text-emerald-600 animate-in fade-in shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />

@@ -1,5 +1,5 @@
-import { API_BASE_URL } from "./jobEndpoints";
-import { getAuthorizationHeader, getAccessToken } from "../../auth/api/tokenStorage";
+import { API_BASE_URL } from "./apiConfig";
+import { getAuthorizationHeader, getAccessToken } from "../../modules/auth/api/tokenStorage";
 
 export class ApiError extends Error {
   constructor({ message, status, data }) {
@@ -51,7 +51,7 @@ export async function request({ endpoint, method = "GET", body = null, headers =
     ...headers,
   };
 
-  try {    
+  try {
     const res = await fetch(buildUrl(endpoint, query), {
       method,
       headers: reqHeaders,
@@ -86,5 +86,5 @@ export const put = (endpoint, body, options) => request({ endpoint, method: "PUT
 export const patch = (endpoint, body, options) => request({ endpoint, method: "PATCH", body, ...options });
 export const del = (endpoint, options) => request({ endpoint, method: "DELETE", ...options });
 
-const jobClient = { request, get, post, put, patch, delete: del, buildUrl };
-export default jobClient;
+const httpClient = { request, get, post, put, patch, delete: del, buildUrl };
+export default httpClient;

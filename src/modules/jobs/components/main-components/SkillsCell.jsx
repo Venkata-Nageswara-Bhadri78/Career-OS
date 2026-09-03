@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import JobSpinner from "../loaders/JobSpinner";
+import Spinner from "../../../../common/components/loaders/Spinner";
 
 export default function SkillsCell({ skills = [], onSave, className = "" }) {
   const [isAdding, setIsAdding] = useState(false);
@@ -93,7 +93,7 @@ export default function SkillsCell({ skills = [], onSave, className = "" }) {
         </button>
       )}
 
-      {isSaving && <JobSpinner className="h-2.5 w-2.5 text-zinc-600 ml-0.5" />}
+      {isSaving && <Spinner className="h-2.5 w-2.5 text-zinc-600 ml-0.5" />}
     </div>
   );
 }

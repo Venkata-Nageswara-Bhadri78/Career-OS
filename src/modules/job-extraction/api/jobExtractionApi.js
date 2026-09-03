@@ -1,13 +1,9 @@
 import JOB_EXTRACTION_ENDPOINTS from "./jobExtractionEndpoints";
-import { post } from "./jobExtractionClient";
-
-const unwrap = (res) => {
-  if (res && res.success === false) throw new Error(res.message || "API request failed");
-  return res?.data !== undefined ? res.data : res;
-};
+import { post } from "../../../common/api/httpClient";
+import { unwrapApiResponse } from "../../../common/api/unwrapApiResponse";
 
 export const extractJobInfo = async ({ sourceUrl, rawJobText }) =>
-  unwrap(await post(JOB_EXTRACTION_ENDPOINTS.PARSE, { sourceUrl, rawJobText }));
+  unwrapApiResponse(await post(JOB_EXTRACTION_ENDPOINTS.PARSE, { sourceUrl, rawJobText }));
 
 const jobExtractionApi = { extractJobInfo };
 

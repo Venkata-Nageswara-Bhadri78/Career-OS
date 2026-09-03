@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import JobSpinner from "../loaders/JobSpinner";
+import Spinner from "../../../../common/components/loaders/Spinner";
 
 export default function DeleteConfirmModal({ isOpen, job, onConfirm, onClose }) {
   const [isDeleting, setIsDeleting] = useState(false);
@@ -59,7 +59,7 @@ export default function DeleteConfirmModal({ isOpen, job, onConfirm, onClose }) 
             disabled={isDeleting}
             className="inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-medium rounded-xl bg-black text-white hover:bg-zinc-800 transition-all shadow-xs disabled:opacity-50"
           >
-            {isDeleting ? <JobSpinner className="h-3.5 w-3.5 text-white" /> : "Delete Application"}
+            {isDeleting ? <Spinner className="h-3.5 w-3.5 text-white" /> : "Delete Application"}
           </button>
         </div>
       </div>

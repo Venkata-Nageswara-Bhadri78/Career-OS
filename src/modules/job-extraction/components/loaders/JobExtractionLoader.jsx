@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import Spinner from "./Spinner";
+import Spinner from "../../../../common/components/loaders/Spinner";
 
 const STAGES = [
   "Reading the pasted posting…",

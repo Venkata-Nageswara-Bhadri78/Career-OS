@@ -3,7 +3,7 @@ import InlineEditableCell from "./InlineEditableCell";
 import SkillsCell from "./SkillsCell";
 import { formatDate } from "../../helpers/jobFormatters";
 import jobApi from "../../api/jobApi";
-import JobSpinner from "../loaders/JobSpinner";
+import Spinner from "../../../../common/components/loaders/Spinner";
 import { copyToClipboard } from "../../../ai/helpers/aiFormatters";
 
 export default function JobDetailsDrawer({
@@ -137,7 +137,7 @@ export default function JobDetailsDrawer({
 
             {isLoading && (
               <div className="py-20 flex flex-col items-center justify-center text-zinc-400 gap-2">
-                <JobSpinner className="h-6 w-6 text-black" />
+                <Spinner className="h-6 w-6 text-black" />
                 <p className="text-xs">Loading opportunity details...</p>
               </div>
             )}

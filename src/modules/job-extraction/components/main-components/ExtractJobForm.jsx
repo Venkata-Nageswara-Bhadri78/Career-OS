@@ -1,4 +1,4 @@
-import Spinner from "../loaders/Spinner";
+import Spinner from "../../../../common/components/loaders/Spinner";
 
 const MAX_TEXT_LENGTH = 50000;
 

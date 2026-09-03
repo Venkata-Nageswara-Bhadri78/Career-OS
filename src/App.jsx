@@ -1,42 +1,44 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import AuthLayout from "./modules/auth/components/main-components/AuthLayout";
-import LoginPage from "./modules/auth/pages/LoginPage";
-import SignUpPage from "./modules/auth/pages/SignUpPage";
-import ForgotPasswordPage from "./modules/auth/pages/ForgotPasswordPage";
-import ResetPasswordPage from "./modules/auth/pages/ResetPasswordPage";
-import VerifyEmailPage from "./modules/auth/pages/VerifyEmailPage";
-import ProtectedRoute from "./modules/jobs/routes/ProtectedRoute";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import ThemeProvider from "./common/theme/ThemeProvider";
+import AuthProvider from "./modules/auth/hooks/AuthProvider";
+import { AuthRouteTree } from "./modules/auth/routes/authRoutes";
+import ProtectedRoute from "./modules/auth/routes/ProtectedRoute";
+import MainLayout from "./common/components/layout/MainLayout";
+import LandingPage from "./common/landing/LandingPage";
+import SettingsPage from "./common/settings/SettingsPage";
+import TermsPage from "./common/legal/TermsPage";
+import PrivacyPage from "./common/legal/PrivacyPage";
 import JobIndex from "./modules/jobs/components/JobIndex";
 import ChatAssistantIndex from "./modules/chat-assistant/components/ChatAssistantIndex";
 import UserProfileIndex from "./modules/user/components/UserProfileIndex";
-import MainLayout from "./common/components/layout/MainLayout";
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route element={<AuthLayout />}>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<SignUpPage />} />
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route path="/verify-email" element={<VerifyEmailPage />} />
-        </Route>
+    <ThemeProvider>
+      <BrowserRouter>
+        <AuthProvider>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/terms" element={<TermsPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+            {AuthRouteTree()}
 
-        <Route element={<ProtectedRoute />}>
-          <Route element={<MainLayout />}>
-            <Route path="/dashboard" element={<JobIndex />} />
-            <Route path="/profile" element={<UserProfileIndex />} />
-            <Route path="/jobs" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/jobs/:jobId/interact" element={<ChatAssistantIndex />} />
-            <Route path="/ai" element={<ChatAssistantIndex />} />
-          </Route>
-        </Route>
+            <Route element={<ProtectedRoute />}>
+              <Route element={<MainLayout />}>
+                <Route path="/dashboard" element={<JobIndex />} />
+                <Route path="/profile" element={<UserProfileIndex />} />
+                <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/jobs" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/jobs/:jobId/interact" element={<ChatAssistantIndex />} />
+                <Route path="/ai" element={<ChatAssistantIndex />} />
+              </Route>
+            </Route>
 
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Routes>
-    </BrowserRouter>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </AuthProvider>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
 

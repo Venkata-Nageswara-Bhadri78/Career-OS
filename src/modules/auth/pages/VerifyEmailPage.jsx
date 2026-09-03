@@ -1,8 +1,5 @@
-import React from "react";
-import VerifyEmail from "../components/main-components/VerifyEmail";
+import VerifyEmailForm from "../components/main-components/VerifyEmailForm";
 
-const VerifyEmailPage = () => {
-  return <VerifyEmail />;
-};
-
-export default VerifyEmailPage;
+export default function VerifyEmailPage() {
+  return <VerifyEmailForm />;
+}

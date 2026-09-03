@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, startTransition } from "react";
 import JobsTable from "../components/main-components/JobsTable";
-import AddJobModal from "../components/main-components/AddJobModal";
+import AddJobModal from "../../job-extraction/components/main-components/AddJobModal";
 import DeleteConfirmModal from "../components/main-components/DeleteConfirmModal";
 import JobDetailsDrawer from "../components/main-components/JobDetailsDrawer";
 import SuccessSnackbar from "../components/main-components/SuccessSnackbar";

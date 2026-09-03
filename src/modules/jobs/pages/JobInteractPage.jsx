@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import jobApi from "../api/jobApi";
-import JobSpinner from "../components/loaders/JobSpinner";
+import Spinner from "../../../common/components/loaders/Spinner";
 
 export default function JobInteractPage() {
   const { jobId } = useParams();
@@ -207,7 +207,7 @@ export default function JobInteractPage() {
                   AI
                 </div>
                 <div className="rounded-2xl p-3.5 bg-zinc-100 text-zinc-600 border border-zinc-200 text-xs flex items-center gap-2">
-                  <JobSpinner className="h-3.5 w-3.5 text-black" />
+                  <Spinner className="h-3.5 w-3.5 text-black" />
                   <span>Analyzing application context & formulating answer...</span>
                 </div>
               </div>

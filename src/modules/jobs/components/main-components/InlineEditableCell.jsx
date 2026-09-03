@@ -8,11 +8,11 @@ export default function InlineEditableCell({
   type = "text",
   options = [],
   className = "",
-  textClassName = "text-zinc-900 font-medium",
+  textClassName = "text-ink font-medium",
   fieldLabel = "Field",
 }) {
   const [isEditing, setIsEditing] = useState(false);
-  const [currentValue, setCurrentValue] = useState(value ?? "");
+  const [draftValue, setDraftValue] = useState(value ?? "");
   const [isSaving, setIsSaving] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
   const [isOpenMenu, setIsOpenMenu] = useState(false);
@@ -22,13 +22,10 @@ export default function InlineEditableCell({
   useEffect(() => {
     if (isEditing && inputRef.current && type === "text") {
       inputRef.current.focus();
-      if (inputRef.current.select) {
-        inputRef.current.select();
-      }
+      inputRef.current.select?.();
     }
   }, [isEditing, type]);
 
-  // Handle outside click for custom dropdown
   useEffect(() => {
     if (!isOpenMenu) return;
     const handleOutsideClick = (e) => {
@@ -37,9 +34,7 @@ export default function InlineEditableCell({
       }
     };
     const handleEscape = (e) => {
-      if (e.key === "Escape") {
-        setIsOpenMenu(false);
-      }
+      if (e.key === "Escape") setIsOpenMenu(false);
     };
     document.addEventListener("mousedown", handleOutsideClick);
     document.addEventListener("keydown", handleEscape);
@@ -55,17 +50,17 @@ export default function InlineEditableCell({
     if (type === "select") {
       setIsOpenMenu((prev) => !prev);
     } else {
-      setCurrentValue(value ?? "");
+      setDraftValue(value ?? "");
       setIsEditing(true);
     }
   };
 
   const handleCancel = () => {
-    setCurrentValue(value ?? "");
+    setDraftValue(value ?? "");
     setIsEditing(false);
   };
 
-  const handleCommit = async (valToSave = currentValue) => {
+  const handleCommit = async (valToSave = draftValue) => {
     setIsEditing(false);
     setIsOpenMenu(false);
     const trimmed = String(valToSave ?? "").trim();
@@ -79,7 +74,7 @@ export default function InlineEditableCell({
       setJustSaved(true);
       setTimeout(() => setJustSaved(false), 1200);
     } catch {
-      setCurrentValue(value ?? "");
+      setDraftValue(value ?? "");
     } finally {
       setIsSaving(false);
     }
@@ -95,7 +90,6 @@ export default function InlineEditableCell({
     }
   };
 
-  // Custom Popover Selection for type === "select"
   if (type === "select") {
     const normalizedOptions = options.map((opt) =>
       typeof opt === "object" ? opt : { value: opt, label: opt }
@@ -104,34 +98,34 @@ export default function InlineEditableCell({
       normalizedOptions.find((o) => o.value === value)?.label || value || placeholder;
 
     return (
-      <div className="relative inline-block" ref={dropdownRef} onClick={(e) => e.stopPropagation()}>
+      <div className="relative inline-block max-w-full" ref={dropdownRef} onClick={(e) => e.stopPropagation()}>
         <button
           type="button"
           onClick={handleStartEdit}
           disabled={isSaving}
           title={`Change ${fieldLabel}`}
-          className={`group inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium rounded-lg bg-white text-zinc-900 border border-zinc-200/90 shadow-2xs hover:border-zinc-400 hover:shadow-xs focus:outline-none focus:ring-2 focus:ring-zinc-900/10 transition-all ${className}`}
+          className={`group inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded-md border border-transparent bg-field/70 text-ink hover:border-line hover:bg-field focus:outline-none transition-all max-w-full ${className}`}
         >
           <span className="truncate">{currentLabel}</span>
           {isSaving ? (
-            <Spinner className="h-2.5 w-2.5 text-zinc-700 shrink-0" />
+            <Spinner className="h-2.5 w-2.5 text-ink shrink-0" />
           ) : (
             <svg
-              className={`h-3 w-3 text-zinc-400 group-hover:text-zinc-900 transition-transform duration-150 shrink-0 ${
-                isOpenMenu ? "rotate-180 text-zinc-900" : ""
+              className={`h-3 w-3 text-muted group-hover:text-ink transition-transform duration-150 shrink-0 ${
+                isOpenMenu ? "rotate-180 text-ink" : ""
               }`}
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
+              aria-hidden="true"
             >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
             </svg>
           )}
         </button>
 
-        {isOpenMenu && (
-          <div className="absolute top-full left-0 mt-1 min-w-[130px] rounded-xl bg-white border border-zinc-200/90 shadow-xl p-1 z-50 animate-in fade-in zoom-in-95 duration-100">
-
+        {isOpenMenu ? (
+          <div className="absolute top-full left-0 mt-1 min-w-[130px] rounded-xl bg-white border border-line shadow-xl p-1 z-50">
             <div className="space-y-0.5 max-h-48 overflow-y-auto">
               {normalizedOptions.map((opt) => {
                 const isSelected = opt.value === value;
@@ -142,69 +136,65 @@ export default function InlineEditableCell({
                     onClick={() => handleCommit(opt.value)}
                     className={`w-full flex items-center justify-between px-2.5 py-1.5 text-xs rounded-lg text-left font-medium transition-colors ${
                       isSelected
-                        ? "bg-zinc-100 text-zinc-900 font-semibold"
-                        : "text-zinc-700 hover:bg-zinc-50 hover:text-black"
+                        ? "bg-field text-ink font-semibold"
+                        : "text-ink/80 hover:bg-field/80 hover:text-ink"
                     }`}
                   >
                     <span>{opt.label}</span>
-                    {isSelected && (
-                      <svg className="h-3.5 w-3.5 text-black shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    {isSelected ? (
+                      <svg className="h-3.5 w-3.5 text-accent shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                       </svg>
-                    )}
+                    ) : null}
                   </button>
                 );
               })}
             </div>
           </div>
-        )}
+        ) : null}
       </div>
     );
   }
 
-  // Text Inline Editor
   if (isEditing) {
     return (
       <div className="relative inline-flex items-center w-full" onClick={(e) => e.stopPropagation()}>
         <input
           ref={inputRef}
           type="text"
-          value={currentValue}
-          onChange={(e) => setCurrentValue(e.target.value)}
+          value={draftValue}
+          onChange={(e) => setDraftValue(e.target.value)}
           onBlur={() => handleCommit()}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
-          className="w-full px-2 py-1 text-xs rounded-lg bg-white border border-black shadow-xs focus:outline-none focus:ring-2 focus:ring-black/10 text-black leading-snug"
+          aria-label={fieldLabel}
+          className="w-full px-2 py-1 text-xs rounded-md bg-white border border-line shadow-xs focus:outline-none focus:border-ink text-ink leading-snug"
         />
       </div>
     );
   }
 
   return (
-    <div
+    <button
+      type="button"
       onClick={handleStartEdit}
-      title={value ? String(value) : `Click to edit ${fieldLabel}`}
-      className={`group relative inline-flex items-center gap-1.5 cursor-pointer rounded px-1.5 py-0.5 -mx-1.5 hover:bg-zinc-100/90 transition-colors duration-150 overflow-hidden w-full ${className}`}
+      title={value ? String(value) : `Edit ${fieldLabel}`}
+      aria-label={value ? `${fieldLabel}: ${value}` : `Edit ${fieldLabel}`}
+      className={`group relative inline-flex items-center gap-1 rounded-md px-1 py-0.5 -mx-1 border border-transparent hover:border-line/80 hover:bg-field/80 focus:outline-none transition-colors duration-150 overflow-hidden w-full text-left ${className}`}
     >
-      <span className={`truncate text-xs ${!value ? "text-zinc-400 italic" : textClassName}`}>
+      <span
+        className={`truncate text-xs border-b border-dotted border-transparent group-hover:border-muted/70 ${
+          !value ? "text-muted italic" : textClassName
+        }`}
+      >
         {value || placeholder}
       </span>
-      {isSaving && <Spinner className="h-3 w-3 text-zinc-600 shrink-0" />}
-      {justSaved && (
-        <svg className="h-3 w-3 text-emerald-600 animate-in fade-in shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      {isSaving ? <Spinner className="h-3 w-3 text-muted shrink-0" /> : null}
+      {justSaved ? (
+        <svg className="h-3 w-3 text-success shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
         </svg>
-      )}
-      {!isSaving && !justSaved && (
-        <svg
-          className="h-2.5 w-2.5 text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-        </svg>
-      )}
-    </div>
+      ) : null}
+    </button>
   );
 }

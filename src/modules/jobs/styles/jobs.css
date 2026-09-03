@@ -1,0 +1,8 @@
+/* Override global gold :focus-visible ring inside the jobs dashboard */
+.jobs-panel :is(button, input, select, textarea):focus-visible {
+  outline: none;
+}
+
+.jobs-panel :is(input, select, textarea):focus {
+  outline: none;
+}

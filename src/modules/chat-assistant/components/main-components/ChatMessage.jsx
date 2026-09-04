@@ -1,71 +1,208 @@
-import { useState } from "react";
-import ChatMarkdownRenderer from "../markdown/ChatMarkdownRenderer";
+import { memo, useEffect, useRef, useState } from "react";
+import { COLLAPSE_RESPONSE_CHARS, SELECTION_ACTIONS } from "../../config/chatAssistantConfig";
+import { copyToClipboard, formatChatTime } from "../../utils/formatters";
+import {
+  ChatIconButton,
+  CheckIcon,
+  CopyIcon,
+  EditIcon,
+  GoodIcon,
+  PoorIcon,
+  ReportIcon,
+  ResendIcon,
+  RetryIcon,
+} from "../common/ChatIcons";
+import ChatMarkdownRenderer from "../renderers/ChatMarkdownRenderer";
 
-export default function ChatMessage({ isAi, content }) {
+function CopyButton({ text, tone = "default" }) {
   const [copied, setCopied] = useState(false);
+  const [failed, setFailed] = useState(false);
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(content);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const onCopy = async () => {
+    const ok = await copyToClipboard(text);
+    setCopied(ok);
+    setFailed(!ok);
+    window.setTimeout(() => {
+      setCopied(false);
+      setFailed(false);
+    }, 1600);
   };
 
-  const copyIcon = (
-    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-    </svg>
+  return (
+    <ChatIconButton
+      label={failed ? "Copy failed" : copied ? "Copied" : "Copy"}
+      onClick={onCopy}
+      tone={tone}
+      className="h-7 w-7"
+    >
+      {copied || failed ? <CheckIcon /> : <CopyIcon />}
+    </ChatIconButton>
   );
+}
 
-  const checkIcon = (
-    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="20 6 9 17 4 12"></polyline>
-    </svg>
-  );
-
-  if (!isAi) {
-    return (
-      <div className="group flex w-full flex-col items-end gap-1 px-4 py-6 md:px-6">
-        <div className="relative flex max-w-[85%] flex-col items-end">
-          <div className="bg-zinc-100 px-5 py-3.5 rounded-3xl rounded-tr-sm text-zinc-900 text-[15px] leading-relaxed max-h-37.5 overflow-y-auto whitespace-pre-wrap wrap-break-word shadow-sm">
-            {content}
-          </div>
-          <button
-            onClick={handleCopy}
-            className="absolute -left-10 bottom-1 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 text-zinc-400 hover:text-zinc-700 bg-white rounded-md shadow-sm border border-zinc-200"
-            title="Copy"
+function UserMessage({ turn, pending, onEdit, onResubmit, disabled }) {
+  return (
+    <article className="group flex w-full flex-col items-end gap-1 px-1 py-3">
+      <div className="relative flex max-w-[85%] flex-col items-end">
+        <div className="bg-field px-5 py-3.5 rounded-3xl rounded-tr-sm text-ink text-[15px] leading-relaxed whitespace-pre-wrap break-words shadow-xs">
+          {turn.userPrompt}
+        </div>
+        <div className="mt-1 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
+          <CopyButton text={turn.userPrompt} />
+          <ChatIconButton
+            label="Edit prompt"
+            disabled={disabled}
+            onClick={() => onEdit?.(turn.userPrompt)}
+            className="h-7 w-7"
           >
-            {copied ? checkIcon : copyIcon}
-          </button>
+            <EditIcon />
+          </ChatIconButton>
+          <ChatIconButton
+            label="Resend prompt"
+            disabled={disabled}
+            onClick={() => onResubmit?.(turn.userPrompt)}
+            className="h-7 w-7"
+          >
+            <ResendIcon />
+          </ChatIconButton>
         </div>
       </div>
-    );
+      <p className="text-[10px] text-muted px-1">
+        {pending ? "Sending…" : formatChatTime(turn.createdAt)}
+      </p>
+    </article>
+  );
+}
+
+function AssistantMessage({
+  turn,
+  onRetry,
+  onComingSoon,
+  onUseSelection,
+  disabled,
+}) {
+  const bodyRef = useRef(null);
+  const [expanded, setExpanded] = useState(false);
+  const [selectionMenu, setSelectionMenu] = useState(null);
+  const long = (turn.aiResponse || "").length > COLLAPSE_RESPONSE_CHARS;
+  const shown = !long || expanded ? turn.aiResponse : `${turn.aiResponse.slice(0, COLLAPSE_RESPONSE_CHARS)}…`;
+
+  useEffect(() => {
+    const node = bodyRef.current;
+    if (!node) return undefined;
+    const onMouseUp = () => {
+      const selection = window.getSelection();
+      const text = selection?.toString().trim();
+      if (!text || !node.contains(selection.anchorNode)) {
+        setSelectionMenu(null);
+        return;
+      }
+      const range = selection.getRangeAt(0).getBoundingClientRect();
+      const parent = node.getBoundingClientRect();
+      setSelectionMenu({
+        text,
+        top: range.top - parent.top - 40,
+        left: Math.min(Math.max(8, range.left - parent.left), parent.width - 220),
+      });
+    };
+    node.addEventListener("mouseup", onMouseUp);
+    return () => node.removeEventListener("mouseup", onMouseUp);
+  }, []);
+
+  return (
+    <article className="group flex w-full gap-3 px-1 py-3">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ink text-white mt-1" aria-hidden="true">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M12 8V4H8" />
+          <rect x="4" y="8" width="16" height="12" rx="2" />
+        </svg>
+      </div>
+      <div className="flex-1 space-y-2 overflow-hidden min-w-0 pt-1">
+        <div ref={bodyRef} className="relative">
+          {selectionMenu ? (
+            <div
+              className="absolute z-10 flex flex-wrap gap-1 rounded-lg border border-line bg-bg p-1 shadow-md"
+              style={{ top: selectionMenu.top, left: selectionMenu.left }}
+            >
+              {SELECTION_ACTIONS.map((action) => (
+                <button
+                  key={action.id}
+                  type="button"
+                  className="px-2 py-1 text-[11px] font-semibold rounded-md hover:bg-field"
+                  onClick={() => {
+                    onUseSelection?.(`${action.prefix}${selectionMenu.text}`);
+                    setSelectionMenu(null);
+                    window.getSelection()?.removeAllRanges();
+                  }}
+                >
+                  {action.label}
+                </button>
+              ))}
+            </div>
+          ) : null}
+          <ChatMarkdownRenderer content={shown} />
+        </div>
+        {long ? (
+          <button
+            type="button"
+            onClick={() => setExpanded((open) => !open)}
+            className="text-[11px] font-semibold text-muted hover:text-ink"
+          >
+            {expanded ? "Show less" : "Show more"}
+          </button>
+        ) : null}
+        <div className="pt-1 flex flex-wrap items-center gap-0.5 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
+          <CopyButton text={turn.aiResponse} />
+          <ChatIconButton
+            label="Retry this reply"
+            disabled={disabled}
+            onClick={() => onRetry?.(turn.userPrompt)}
+            className="h-7 w-7"
+          >
+            <RetryIcon />
+          </ChatIconButton>
+          <ChatIconButton label="Good response" onClick={onComingSoon} className="h-7 w-7">
+            <GoodIcon />
+          </ChatIconButton>
+          <ChatIconButton label="Poor response" onClick={onComingSoon} className="h-7 w-7">
+            <PoorIcon />
+          </ChatIconButton>
+          <ChatIconButton label="Report response" onClick={onComingSoon} className="h-7 w-7">
+            <ReportIcon />
+          </ChatIconButton>
+          <span className="text-[10px] text-muted px-2">{formatChatTime(turn.createdAt)}</span>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function ChatMessage({
+  turn,
+  pending = false,
+  onEdit,
+  onResubmit,
+  onRetry,
+  onComingSoon,
+  onUseSelection,
+  disabled,
+}) {
+  if (pending || !turn.aiResponse) {
+    return <UserMessage turn={turn} pending={pending} onEdit={onEdit} onResubmit={onResubmit} disabled={disabled} />;
   }
 
   return (
-    <div className="group flex w-full gap-4 px-4 py-6 md:px-6 hover:bg-zinc-50/50 transition-colors">
-      <div className="flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-full bg-black text-white shadow-sm mt-1">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 8V4H8"></path>
-          <rect x="4" y="8" width="16" height="12" rx="2"></rect>
-          <path d="M2 14h2"></path>
-          <path d="M20 14h2"></path>
-          <path d="M15 13v2"></path>
-          <path d="M9 13v2"></path>
-        </svg>
-      </div>
-      <div className="flex-1 space-y-2 overflow-hidden max-w-4xl pt-1">
-        <ChatMarkdownRenderer content={content} />
-        <div className="pt-2 flex items-center justify-start opacity-0 group-hover:opacity-100 transition-opacity">
-          <button
-            onClick={handleCopy}
-            className="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-800 transition-colors py-1 px-2 -ml-2 rounded-md hover:bg-zinc-100"
-          >
-            {copied ? checkIcon : copyIcon}
-            {copied ? "Copied" : "Copy"}
-          </button>
-        </div>
-      </div>
-    </div>
+    <>
+      <UserMessage turn={turn} onEdit={onEdit} onResubmit={onResubmit} disabled={disabled} />
+      <AssistantMessage
+        turn={turn}
+        onRetry={onRetry}
+        onComingSoon={onComingSoon}
+        onUseSelection={onUseSelection}
+        disabled={disabled}
+      />
+    </>
   );
 }
+
+export default memo(ChatMessage);

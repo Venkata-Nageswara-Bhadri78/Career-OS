@@ -14,8 +14,10 @@ import { CommonProtectedRoutes, CommonPublicRoutes } from "./common/routes/commo
 import LandingPage from "./common/pages/LandingPage";
 import JobDashboardPage from "./modules/jobs/pages/JobDashboardPage";
 import AddJobModal from "./modules/job-extraction/components/main-components/AddJobModal";
-import ChatAssistantIndex from "./modules/chat-assistant/components/ChatAssistantIndex";
-import ChatHistoryShellBinder from "./modules/chat-assistant/components/main-components/ChatHistoryShellBinder";
+import {
+  ChatAssistantRouteTree,
+  ChatHistoryShellBinder,
+} from "./modules/chat-assistant/routes/chatAssistantRoutes";
 import UserProfileIndex from "./modules/user/components/UserProfileIndex";
 
 function LandingRoute() {
@@ -79,8 +81,7 @@ function App() {
                 <Route path={APP_PATHS.PROFILE} element={<UserProfileIndex />} />
                 {CommonProtectedRoutes()}
                 <Route path="/jobs" element={<Navigate to={APP_PATHS.DASHBOARD} replace />} />
-                <Route path="/jobs/:jobId/interact" element={<ChatAssistantIndex />} />
-                <Route path={APP_PATHS.AI} element={<ChatAssistantIndex />} />
+                {ChatAssistantRouteTree()}
               </Route>
             </Route>
 

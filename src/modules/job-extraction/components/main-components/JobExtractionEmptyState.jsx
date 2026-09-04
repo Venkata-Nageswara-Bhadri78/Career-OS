@@ -17,8 +17,8 @@ export default function JobExtractionEmptyState() {
   return (
     <div className="h-full flex flex-col items-center justify-center text-center px-8">
       <div className="relative mb-6">
-        <div className="h-16 w-16 rounded-2xl bg-black flex items-center justify-center shadow-lg">
-          <svg className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="h-16 w-16 rounded-2xl bg-ink flex items-center justify-center shadow-lg">
+          <svg className="h-8 w-8 text-bg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -27,15 +27,15 @@ export default function JobExtractionEmptyState() {
             />
           </svg>
         </div>
-        <div className="absolute -top-1.5 -right-1.5 h-6 w-6 rounded-full bg-emerald-400 border-2 border-white flex items-center justify-center">
-          <span className="h-1.5 w-1.5 rounded-full bg-white" />
+        <div className="absolute -top-1.5 -right-1.5 h-6 w-6 rounded-full bg-accent border-2 border-bg flex items-center justify-center">
+          <span className="h-1.5 w-1.5 rounded-full bg-bg" />
         </div>
       </div>
 
-      <h3 className="text-xl font-bold text-zinc-900 tracking-tight">AI-Powered Job Extraction</h3>
-      <p className="text-xs text-zinc-500 mt-2 max-w-sm leading-relaxed">
+      <h3 className="text-xl font-bold text-ink tracking-tight">AI-Powered Job Extraction</h3>
+      <p className="text-xs text-muted mt-2 max-w-sm leading-relaxed">
         Fill in the job URL and paste the posting on the left, then hit{" "}
-        <span className="font-semibold text-zinc-700">Extract Job Info</span> — your review form will
+        <span className="font-semibold text-ink">Extract Job Info</span> — your review form will
         appear here.
       </p>
 
@@ -43,14 +43,14 @@ export default function JobExtractionEmptyState() {
         {FEATURES.map((f) => (
           <div
             key={f.title}
-            className="flex items-start gap-3 p-3.5 rounded-2xl bg-white border border-zinc-200/80 shadow-xs text-left"
+            className="flex items-start gap-3 p-3.5 rounded-2xl bg-bg border border-line shadow-xs text-left"
           >
-            <span className="h-6 w-6 rounded-full bg-zinc-100 text-zinc-700 flex items-center justify-center text-[11px] font-bold shrink-0 mt-0.5">
+            <span className="h-6 w-6 rounded-full bg-field text-ink flex items-center justify-center text-[11px] font-bold shrink-0 mt-0.5">
               ✓
             </span>
             <div>
-              <p className="text-xs font-semibold text-zinc-900">{f.title}</p>
-              <p className="text-[11px] text-zinc-500 mt-0.5 leading-relaxed">{f.desc}</p>
+              <p className="text-xs font-semibold text-ink">{f.title}</p>
+              <p className="text-[11px] text-muted mt-0.5 leading-relaxed">{f.desc}</p>
             </div>
           </div>
         ))}

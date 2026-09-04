@@ -1,46 +1,52 @@
 import { useState } from "react";
 import Spinner from "../../../../common/components/loaders/Spinner";
 import SkillsTagEditor from "./SkillsTagEditor";
+import {
+  EMPLOYMENT_TYPE_SUGGESTIONS,
+  WORK_MODE_SUGGESTIONS,
+} from "../../config/jobExtractionConfig";
+import { validateReviewForm } from "../../mappers/jobExtractionMapper";
 
-const EMPLOYMENT_TYPE_OPTIONS = ["Full Time", "Part Time", "Contract", "Internship"];
-const WORK_MODE_OPTIONS = ["Remote", "Hybrid", "On-site"];
-
-function FieldRow({ label, required = false, children, error }) {
+function FieldRow({ label, required = false, children, error, highlight = false }) {
   return (
-    <div className="flex items-start gap-4 py-2.5 border-b border-zinc-100 last:border-b-0">
-      <label className="w-36 shrink-0 pt-2 text-xs font-medium text-zinc-600">
-        {label} {required && <span className="text-red-500">*</span>}
+    <div className="flex items-start gap-4 py-2.5 border-b border-line last:border-b-0">
+      <label className="w-36 shrink-0 pt-2 text-xs font-medium text-muted">
+        {label} {required && <span className="text-danger">*</span>}
       </label>
       <div className="flex-1 min-w-0">
-        {children}
-        {error && <p className="text-[11px] text-red-600 font-medium mt-1">{error}</p>}
+        <div className={highlight ? "job-extraction-manual-review rounded-lg p-0.5" : undefined}>{children}</div>
+        {error && <p className="text-[11px] text-danger font-medium mt-1">{error}</p>}
       </div>
     </div>
   );
 }
 
-function ReadOnlyRow({ label, value, isLink = false }) {
+function ReadOnlyRow({ label, value, isLink = false, clamp = false }) {
   return (
-    <div className="flex items-start gap-4 py-2.5 border-b border-zinc-100 last:border-b-0">
-      <label className="w-36 shrink-0 pt-2 text-xs font-medium text-zinc-400">{label}</label>
+    <div className="flex items-start gap-4 py-2.5 border-b border-line last:border-b-0">
+      <span className="w-36 shrink-0 pt-2 text-xs font-medium text-muted/70">{label}</span>
       <div className="flex-1 min-w-0 pt-2">
         {value ? (
           isLink ? (
             <a
               href={value}
               target="_blank"
-              rel="noreferrer"
-              className="text-xs font-medium text-zinc-700 hover:text-black hover:underline break-all"
+              rel="noopener noreferrer"
+              className="text-xs font-medium text-ink hover:underline break-all"
             >
               {value}
             </a>
           ) : (
-            <p className="text-xs text-zinc-600 leading-relaxed whitespace-pre-wrap max-h-32 overflow-y-auto pr-2">
+            <p
+              className={`text-xs text-muted leading-relaxed whitespace-pre-wrap break-words ${
+                clamp ? "job-extraction-clamped-text" : ""
+              }`}
+            >
               {value}
             </p>
           )
         ) : (
-          <span className="text-xs text-zinc-300 italic">—</span>
+          <span className="text-xs text-muted/40 italic">—</span>
         )}
       </div>
     </div>
@@ -54,8 +60,11 @@ export default function JobReviewForm({
   onStartOver,
   isSubmitting = false,
   error = null,
+  urlWasCleaned = false,
+  inputUrl = "",
 }) {
   const [validationErrors, setValidationErrors] = useState({});
+  const needsManualReview = Boolean(data.requiresManualReview);
 
   const handleFieldChange = (key, value) => {
     onChange(key, value);
@@ -66,54 +75,79 @@ export default function JobReviewForm({
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const nextErrors = {};
-    if (!data.title?.trim()) nextErrors.title = "Job title is required.";
-    if (!data.company?.trim()) nextErrors.company = "Company name is required.";
+    const nextErrors = validateReviewForm(data);
     if (Object.keys(nextErrors).length > 0) {
       setValidationErrors(nextErrors);
       return;
     }
+    setValidationErrors({});
     onSubmit();
   };
 
   const textInputClass =
-    "w-full px-3 py-2 text-xs rounded-lg bg-zinc-50 border border-zinc-200 focus:bg-white focus:border-black focus:outline-none transition-all placeholder:text-zinc-400 text-zinc-900";
+    "w-full px-3 py-2 text-xs rounded-lg bg-field border border-line focus:bg-bg focus:border-ink focus:outline-none transition-all placeholder:text-muted/70 text-ink";
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col h-full min-h-0">
-      <div className="pb-4 border-b border-zinc-100">
-        <h2 className="text-lg font-bold text-zinc-900">Review & Edit</h2>
-        <p className="text-xs text-zinc-500 mt-0.5 leading-relaxed">
+    <form onSubmit={handleSubmit} className="flex flex-col">
+      <div className="pb-4 border-b border-line shrink-0">
+        <h2 className="text-lg font-bold text-ink">Review & Edit</h2>
+        <p className="text-xs text-muted mt-0.5 leading-relaxed">
           We pre-filled everything we could confidently find. Empty fields were not clearly present in
           the posting — fill them in if you know them.
         </p>
+        {needsManualReview && (
+          <p className="mt-2 text-[11px] font-medium text-accent" role="status">
+            Title and company need your attention before you can save this record.
+          </p>
+        )}
+        {urlWasCleaned && (
+          <p className="mt-2 text-[11px] text-muted" role="status">
+            Link cleaned for storage
+            {inputUrl.trim() ? `: your input differed from the canonical URL below.` : "."}
+          </p>
+        )}
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto py-2">
+      <div className="py-2">
         {error && (
-          <div className="my-3 p-3 rounded-xl bg-red-50/80 border border-red-200 text-xs text-red-700 flex items-start gap-2">
+          <div
+            className="my-3 p-3 rounded-xl bg-danger/5 border border-danger/20 text-xs text-danger flex items-start gap-2"
+            role="alert"
+          >
             <span className="font-bold shrink-0">!</span>
             <span>{error}</span>
           </div>
         )}
 
-        <FieldRow label="Job Title" required error={validationErrors.title}>
+        <FieldRow
+          label="Job Title"
+          required
+          error={validationErrors.title}
+          highlight={needsManualReview && !data.title?.trim()}
+        >
           <input
             type="text"
             value={data.title || ""}
             onChange={(e) => handleFieldChange("title", e.target.value)}
             placeholder="e.g. Senior Software Engineer"
-            className={`${textInputClass} ${validationErrors.title ? "border-red-300" : ""}`}
+            aria-required="true"
+            className={`${textInputClass} ${validationErrors.title ? "border-danger/40" : ""}`}
           />
         </FieldRow>
 
-        <FieldRow label="Company" required error={validationErrors.company}>
+        <FieldRow
+          label="Company"
+          required
+          error={validationErrors.company}
+          highlight={needsManualReview && !data.company?.trim()}
+        >
           <input
             type="text"
             value={data.company || ""}
             onChange={(e) => handleFieldChange("company", e.target.value)}
             placeholder="e.g. Stripe"
-            className={`${textInputClass} ${validationErrors.company ? "border-red-300" : ""}`}
+            aria-required="true"
+            className={`${textInputClass} ${validationErrors.company ? "border-danger/40" : ""}`}
           />
         </FieldRow>
 
@@ -137,7 +171,7 @@ export default function JobReviewForm({
             className={textInputClass}
           />
           <datalist id="employment-type-options">
-            {EMPLOYMENT_TYPE_OPTIONS.map((opt) => (
+            {EMPLOYMENT_TYPE_SUGGESTIONS.map((opt) => (
               <option key={opt} value={opt} />
             ))}
           </datalist>
@@ -153,7 +187,7 @@ export default function JobReviewForm({
             className={textInputClass}
           />
           <datalist id="work-mode-options">
-            {WORK_MODE_OPTIONS.map((opt) => (
+            {WORK_MODE_SUGGESTIONS.map((opt) => (
               <option key={opt} value={opt} />
             ))}
           </datalist>
@@ -219,7 +253,7 @@ export default function JobReviewForm({
           />
         </FieldRow>
 
-        <FieldRow label="Skills">
+        <FieldRow label="Skills" error={validationErrors.skills}>
           <SkillsTagEditor
             skills={data.skills || []}
             onChange={(skills) => handleFieldChange("skills", skills)}
@@ -231,37 +265,37 @@ export default function JobReviewForm({
             value={data.description || ""}
             onChange={(e) => handleFieldChange("description", e.target.value)}
             placeholder="AI-cleaned summary of the role…"
-            rows={4}
-            className={`${textInputClass} resize-none leading-relaxed`}
+            rows={3}
+            className={`${textInputClass} job-extraction-field-grow leading-relaxed`}
           />
         </FieldRow>
 
         <div className="mt-2 pt-2">
-          <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider mb-1 px-0.5">
+          <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-1 px-0.5">
             Source Reference (auto-detected, read-only)
           </p>
           <ReadOnlyRow label="Source URL" value={data.sourceUrl} isLink />
-          <ReadOnlyRow label="Original Text" value={data.originalDescription} />
+          <ReadOnlyRow label="Original Text" value={data.originalDescription} clamp />
         </div>
       </div>
 
-      <div className="pt-3 border-t border-zinc-100 flex items-center justify-between gap-3">
+      <div className="pt-3 border-t border-line flex items-center justify-between gap-3 shrink-0">
         <button
           type="button"
           onClick={onStartOver}
           disabled={isSubmitting}
-          className="px-3 py-2 text-xs font-medium text-zinc-500 hover:text-black transition-colors disabled:opacity-50"
+          className="px-3 py-2 text-xs font-medium text-muted hover:text-ink transition-colors disabled:opacity-50"
         >
           ← Start Over
         </button>
         <button
           type="submit"
           disabled={isSubmitting}
-          className="inline-flex items-center justify-center gap-1.5 px-6 py-2.5 text-xs font-semibold rounded-xl bg-black text-white hover:bg-zinc-800 active:scale-[0.99] transition-all shadow-xs disabled:opacity-50"
+          className="inline-flex items-center justify-center gap-1.5 px-6 py-2.5 text-xs font-semibold rounded-xl bg-accent text-ink hover:opacity-90 active:scale-[0.99] transition-all shadow-xs disabled:opacity-50"
         >
           {isSubmitting ? (
             <>
-              <Spinner className="h-3.5 w-3.5 text-white" />
+              <Spinner className="h-3.5 w-3.5 text-ink" />
               <span>Adding…</span>
             </>
           ) : (

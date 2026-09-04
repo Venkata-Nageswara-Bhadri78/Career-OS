@@ -1,27 +1,11 @@
-import { API_BASE_URL } from "./apiConfig";
-import { getAuthorizationHeader } from "../../modules/auth/api/tokenStorage";
-import { endSession, refreshSession } from "../../modules/auth/api/authSession";
-import { isAuthPublicEndpoint } from "../../modules/auth/api/authEndpoints";
+import { API_BASE_URL, INTERNAL_API_HEADER, INTERNAL_API_PREFIX } from "./apiConfig";
+import { ApiError, AUTH_MESSAGES, CLIENT_COPY, isApiError } from "./apiError";
+import { endSession, getAuthorizationHeader, isPublicEndpoint, refreshSession } from "./sessionBridge";
 
-const CLIENT_COPY = Object.freeze({
-  timeout: "Request timed out. Please try again.",
-  network: "Unable to reach the server. Please try again.",
-  generic: "Something went wrong.",
-  unauthorized: "Your session has ended. Please sign in again.",
-});
-
-export class ApiError extends Error {
-  constructor({ message, status, data, retryAfter = null }) {
-    super(message);
-    this.name = "ApiError";
-    this.status = status;
-    this.data = data;
-    this.retryAfter = retryAfter;
-  }
-}
+const DEFAULT_TIMEOUT_MS = 30_000;
 
 export function buildUrl(endpoint, query = {}) {
-  const url = new URL(endpoint, API_BASE_URL);
+  const url = new URL(endpoint, `${API_BASE_URL}/`);
   Object.entries(query).forEach(([key, value]) => {
     if (value === undefined || value === null || value === "") return;
     if (Array.isArray(value)) value.forEach((item) => url.searchParams.append(key, item));
@@ -30,17 +14,51 @@ export function buildUrl(endpoint, query = {}) {
   return url.toString();
 }
 
+function normalizePath(endpoint) {
+  const raw = String(endpoint || "").split("?")[0];
+  if (raw.startsWith("http://") || raw.startsWith("https://")) {
+    try {
+      return new URL(raw).pathname;
+    } catch {
+      return raw;
+    }
+  }
+  return raw.startsWith("/") ? raw : `/${raw}`;
+}
+
+function assertBrowserSafeEndpoint(endpoint) {
+  const path = normalizePath(endpoint).toLowerCase();
+  if (path === INTERNAL_API_PREFIX || path.startsWith(`${INTERNAL_API_PREFIX}/`)) {
+    throw new ApiError({ message: CLIENT_COPY.blocked, status: 403, data: null });
+  }
+}
+
+function sanitizeHeaders(headers = {}) {
+  const next = {};
+  Object.entries(headers).forEach(([key, value]) => {
+    if (value === undefined || value === null) return;
+    if (key.toLowerCase() === INTERNAL_API_HEADER.toLowerCase()) return;
+    next[key] = value;
+  });
+  return next;
+}
+
+function envelopeMessage(data) {
+  return typeof data?.message === "string" ? data.message.trim() : "";
+}
+
 function parseRetryAfter(response, data) {
   const header = response.headers.get("Retry-After");
   if (header) {
     const seconds = Number.parseInt(header, 10);
-    if (Number.isFinite(seconds)) return seconds;
+    if (Number.isFinite(seconds) && seconds >= 0) return seconds;
   }
   const fromBody = data?.retryAfter ?? data?.data?.retryAfter;
-  return Number.isFinite(fromBody) ? fromBody : null;
+  return Number.isFinite(fromBody) && fromBody >= 0 ? fromBody : null;
 }
 
 async function parseBody(response) {
+  if (response.status === 204) return null;
   const contentType = response.headers.get("content-type") ?? "";
   if (contentType.includes("application/json")) {
     return response.json().catch(() => null);
@@ -51,21 +69,74 @@ async function parseBody(response) {
   return null;
 }
 
-function toApiError(error, fallbackStatus = 500) {
-  if (error instanceof ApiError) return error;
+function toApiError(error) {
+  if (isApiError(error)) return error;
   if (error?.name === "AbortError") {
     return new ApiError({ message: CLIENT_COPY.timeout, status: 408, data: null });
   }
   return new ApiError({
     message: CLIENT_COPY.network,
-    status: fallbackStatus,
+    status: 0,
     data: null,
   });
 }
 
-function shouldRefresh(endpoint, skipRefresh, isRetry, status) {
+function shouldHardLogout(status, message) {
+  return status === 401 && message === AUTH_MESSAGES.NOT_AUTHENTICATED;
+}
+
+function shouldRefresh({ endpoint, skipRefresh, isRetry, status, message }) {
   if (skipRefresh || isRetry || status !== 401) return false;
-  return !isAuthPublicEndpoint(endpoint);
+  if (isPublicEndpoint(endpoint)) return false;
+  if (message === AUTH_MESSAGES.NOT_AUTHENTICATED) return false;
+  if (message === AUTH_MESSAGES.INVALID_INTERNAL_KEY) return false;
+  if (message === AUTH_MESSAGES.INVALID_LOGIN) return false;
+  return message === AUTH_MESSAGES.UNAUTHORIZED || message === "";
+}
+
+function composeAbortSignal(userSignal, timeoutMs) {
+  const timeoutController = new AbortController();
+  let timedOut = false;
+  const timer = setTimeout(() => {
+    timedOut = true;
+    timeoutController.abort();
+  }, timeoutMs);
+
+  const signals = [timeoutController.signal];
+  if (userSignal) signals.push(userSignal);
+
+  let signal = timeoutController.signal;
+  let abortListener = null;
+  if (typeof AbortSignal !== "undefined" && typeof AbortSignal.any === "function") {
+    signal = AbortSignal.any(signals);
+  } else if (userSignal) {
+    const merged = new AbortController();
+    abortListener = () => merged.abort();
+    if (userSignal.aborted || timeoutController.signal.aborted) merged.abort();
+    else {
+      userSignal.addEventListener("abort", abortListener);
+      timeoutController.signal.addEventListener("abort", abortListener);
+    }
+    signal = merged.signal;
+  }
+
+  return {
+    signal,
+    timedOut: () => timedOut,
+    cleanup: () => {
+      clearTimeout(timer);
+      if (abortListener && userSignal) userSignal.removeEventListener("abort", abortListener);
+    },
+  };
+}
+
+function unauthorizedError(data, retryAfter) {
+  return new ApiError({
+    message: CLIENT_COPY.unauthorized,
+    status: 401,
+    data,
+    retryAfter,
+  });
 }
 
 export async function request({
@@ -74,23 +145,24 @@ export async function request({
   body = null,
   headers = {},
   query = {},
-  timeout = 30000,
+  timeout = DEFAULT_TIMEOUT_MS,
   signal,
   skipAuth = false,
   skipRefresh = false,
   isRetry = false,
 }) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeout);
+  assertBrowserSafeEndpoint(endpoint);
+
+  const abort = composeAbortSignal(signal, timeout);
   const bearerToken = skipAuth ? null : getAuthorizationHeader();
   const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
 
-  const reqHeaders = {
+  const reqHeaders = sanitizeHeaders({
     Accept: "application/json",
     ...(isFormData ? {} : { "Content-Type": "application/json" }),
     ...(bearerToken ? { Authorization: bearerToken } : {}),
     ...headers,
-  };
+  });
 
   if (isFormData) {
     delete reqHeaders["Content-Type"];
@@ -106,17 +178,22 @@ export async function request({
       method,
       headers: reqHeaders,
       body: serializedBody,
-      signal: signal ?? controller.signal,
+      signal: abort.signal,
     });
 
     const data = await parseBody(response);
     if (response.ok) return data;
 
     const retryAfter = parseRetryAfter(response, data);
-    const message = data?.message || response.statusText || CLIENT_COPY.generic;
+    const message = envelopeMessage(data) || response.statusText || CLIENT_COPY.generic;
     const error = new ApiError({ message, status: response.status, data, retryAfter });
 
-    if (shouldRefresh(endpoint, skipRefresh, isRetry, response.status)) {
+    if (shouldHardLogout(response.status, message)) {
+      endSession({ redirect: true });
+      throw unauthorizedError(data, retryAfter);
+    }
+
+    if (shouldRefresh({ endpoint, skipRefresh, isRetry, status: response.status, message })) {
       try {
         await refreshSession();
         return request({
@@ -133,20 +210,21 @@ export async function request({
         });
       } catch {
         endSession({ redirect: true });
-        throw new ApiError({
-          message: CLIENT_COPY.unauthorized,
-          status: 401,
-          data,
-          retryAfter,
-        });
+        throw unauthorizedError(data, retryAfter);
       }
     }
 
     throw error;
   } catch (err) {
+    if (err?.name === "AbortError") {
+      if (signal?.aborted && !abort.timedOut()) {
+        throw new ApiError({ message: CLIENT_COPY.cancelled, status: 499, data: null });
+      }
+      throw new ApiError({ message: CLIENT_COPY.timeout, status: 408, data: null });
+    }
     throw toApiError(err);
   } finally {
-    clearTimeout(timer);
+    abort.cleanup();
   }
 }
 
@@ -166,45 +244,71 @@ export async function upload(endpoint, formData, options = {}) {
 }
 
 export async function download(endpoint, options = {}) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), options.timeout ?? 30000);
+  assertBrowserSafeEndpoint(endpoint);
+
+  const abort = composeAbortSignal(options.signal, options.timeout ?? DEFAULT_TIMEOUT_MS);
   const bearerToken = options.skipAuth ? null : getAuthorizationHeader();
 
   try {
     const response = await fetch(buildUrl(endpoint, options.query), {
       method: options.method || "GET",
-      headers: {
+      headers: sanitizeHeaders({
         ...(bearerToken ? { Authorization: bearerToken } : {}),
         ...(options.headers ?? {}),
-      },
-      signal: options.signal ?? controller.signal,
+      }),
+      signal: abort.signal,
     });
 
-    if (response.status === 401 && !options.skipRefresh && !options.isRetry && !isAuthPublicEndpoint(endpoint)) {
-      try {
-        await refreshSession();
-        return download(endpoint, { ...options, isRetry: true });
-      } catch {
-        endSession({ redirect: true });
-        throw new ApiError({ message: CLIENT_COPY.unauthorized, status: 401, data: null });
-      }
-    }
+    const messagePeek = async () => {
+      const data = await parseBody(response.clone ? response.clone() : response);
+      return { data, message: envelopeMessage(data), retryAfter: parseRetryAfter(response, data) };
+    };
 
     if (!response.ok) {
-      const data = await parseBody(response);
+      const { data, message, retryAfter } = await messagePeek();
+
+      if (shouldHardLogout(response.status, message)) {
+        endSession({ redirect: true });
+        throw unauthorizedError(data, retryAfter);
+      }
+
+      if (
+        shouldRefresh({
+          endpoint,
+          skipRefresh: options.skipRefresh,
+          isRetry: options.isRetry,
+          status: response.status,
+          message,
+        })
+      ) {
+        try {
+          await refreshSession();
+          return download(endpoint, { ...options, isRetry: true });
+        } catch {
+          endSession({ redirect: true });
+          throw unauthorizedError(data, retryAfter);
+        }
+      }
+
       throw new ApiError({
-        message: data?.message || response.statusText || CLIENT_COPY.generic,
+        message: message || response.statusText || CLIENT_COPY.generic,
         status: response.status,
         data,
-        retryAfter: parseRetryAfter(response, data),
+        retryAfter,
       });
     }
 
     return response;
   } catch (err) {
+    if (err?.name === "AbortError") {
+      if (options.signal?.aborted && !abort.timedOut()) {
+        throw new ApiError({ message: CLIENT_COPY.cancelled, status: 499, data: null });
+      }
+      throw new ApiError({ message: CLIENT_COPY.timeout, status: 408, data: null });
+    }
     throw toApiError(err);
   } finally {
-    clearTimeout(timer);
+    abort.cleanup();
   }
 }
 

@@ -1,18 +1,43 @@
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import ThemeProvider from "./common/theme/ThemeProvider";
 import AuthProvider from "./modules/auth/hooks/AuthProvider";
 import { AuthRouteTree } from "./modules/auth/routes/authRoutes";
 import ProtectedRoute from "./modules/auth/routes/ProtectedRoute";
+import AuthBootScreen from "./modules/auth/components/loaders/AuthBootScreen";
+import { useAuth } from "./modules/auth/hooks/useAuth";
 import MainLayout from "./common/components/layout/MainLayout";
-import LandingPage from "./common/landing/LandingPage";
-import SettingsPage from "./common/settings/SettingsPage";
-import TermsPage from "./common/legal/TermsPage";
-import PrivacyPage from "./common/legal/PrivacyPage";
+import ChatHistorySlotProvider from "./common/components/layout/ChatHistorySlotProvider";
+import ShellSessionProvider from "./common/session/ShellSessionProvider";
+import { APP_PATHS } from "./common/config/appPaths";
+import { CommonProtectedRoutes, CommonPublicRoutes } from "./common/routes/commonRoutes";
+import LandingPage from "./common/pages/LandingPage";
 import JobDashboardPage from "./modules/jobs/pages/JobDashboardPage";
 import AddJobModal from "./modules/job-extraction/components/main-components/AddJobModal";
 import ChatAssistantIndex from "./modules/chat-assistant/components/ChatAssistantIndex";
+import ChatHistoryShellBinder from "./modules/chat-assistant/components/main-components/ChatHistoryShellBinder";
 import UserProfileIndex from "./modules/user/components/UserProfileIndex";
+
+function LandingRoute() {
+  const { isAuthenticated, isBooting } = useAuth();
+  if (isBooting) return <AuthBootScreen />;
+  if (isAuthenticated) return <Navigate to={APP_PATHS.DASHBOARD} replace />;
+  return <LandingPage />;
+}
+
+function ProtectedAppShell() {
+  const { user, signOut, signOutAll } = useAuth();
+  const session = useMemo(() => ({ user, signOut, signOutAll }), [user, signOut, signOutAll]);
+
+  return (
+    <ShellSessionProvider value={session}>
+      <ChatHistorySlotProvider>
+        <ChatHistoryShellBinder />
+        <MainLayout />
+      </ChatHistorySlotProvider>
+    </ShellSessionProvider>
+  );
+}
 
 function JobsDashboardEntry() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -45,23 +70,21 @@ function App() {
       <BrowserRouter>
         <AuthProvider>
           <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/terms" element={<TermsPage />} />
-            <Route path="/privacy" element={<PrivacyPage />} />
+            {CommonPublicRoutes({ landingElement: <LandingRoute /> })}
             {AuthRouteTree()}
 
             <Route element={<ProtectedRoute />}>
-              <Route element={<MainLayout />}>
-                <Route path="/dashboard" element={<JobsDashboardEntry />} />
-                <Route path="/profile" element={<UserProfileIndex />} />
-                <Route path="/settings" element={<SettingsPage />} />
-                <Route path="/jobs" element={<Navigate to="/dashboard" replace />} />
+              <Route element={<ProtectedAppShell />}>
+                <Route path={APP_PATHS.DASHBOARD} element={<JobsDashboardEntry />} />
+                <Route path={APP_PATHS.PROFILE} element={<UserProfileIndex />} />
+                {CommonProtectedRoutes()}
+                <Route path="/jobs" element={<Navigate to={APP_PATHS.DASHBOARD} replace />} />
                 <Route path="/jobs/:jobId/interact" element={<ChatAssistantIndex />} />
-                <Route path="/ai" element={<ChatAssistantIndex />} />
+                <Route path={APP_PATHS.AI} element={<ChatAssistantIndex />} />
               </Route>
             </Route>
 
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="*" element={<Navigate to={APP_PATHS.LANDING} replace />} />
           </Routes>
         </AuthProvider>
       </BrowserRouter>

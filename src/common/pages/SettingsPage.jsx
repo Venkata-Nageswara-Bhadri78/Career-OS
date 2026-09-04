@@ -1,48 +1,14 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useTheme } from "../theme/useTheme";
-import { AUTH_PATHS } from "../../modules/auth/config/authConfig";
-import { useAuth } from "../../modules/auth/hooks/useAuth";
+import { useSettings } from "../hooks/useSettings";
 
 export default function SettingsPage() {
-  const { user, signOut, signOutAll } = useAuth();
-  const { themeId, themes, setTheme } = useTheme();
-  const navigate = useNavigate();
-  const [busy, setBusy] = useState("");
-  const [error, setError] = useState("");
-
-  const handleLogout = async () => {
-    setBusy("logout");
-    setError("");
-    try {
-      await signOut();
-      navigate(AUTH_PATHS.LOGIN, { replace: true });
-    } catch {
-      setError("Unable to sign out right now. Your local session was cleared.");
-      navigate(AUTH_PATHS.LOGIN, { replace: true });
-    } finally {
-      setBusy("");
-    }
-  };
-
-  const handleLogoutAll = async () => {
-    setBusy("logout-all");
-    setError("");
-    try {
-      await signOutAll();
-      navigate(AUTH_PATHS.LOGIN, { replace: true });
-    } catch {
-      setError("Unable to sign out of every device right now. This browser was signed out.");
-      navigate(AUTH_PATHS.LOGIN, { replace: true });
-    } finally {
-      setBusy("");
-    }
-  };
+  const { user, themeId, themes, setTheme, busy, error, handleLogout, handleLogoutAll } = useSettings();
 
   return (
     <div className="p-6 sm:p-8 max-w-3xl">
       <h1 className="font-display text-3xl tracking-[0.06em] uppercase">Settings</h1>
-      <p className="mt-2 text-sm text-muted">Theme is stored on this device. Account persistence will come later.</p>
+      <p className="mt-2 text-sm text-muted">
+        Theme is stored on this device. Account appearance persistence will be added later.
+      </p>
 
       {error ? (
         <p className="mt-4 text-sm text-danger" role="alert">
@@ -55,7 +21,7 @@ export default function SettingsPage() {
         <p className="mt-2 text-sm text-muted">
           These colours replace the 30% ink surfaces. White remains the primary background and gold stays the accent.
         </p>
-        <div className="mt-5 grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="mt-5 grid grid-cols-2 sm:grid-cols-4 gap-3" role="list">
           {themes.map((theme) => {
             const selected = theme.id === themeId;
             return (

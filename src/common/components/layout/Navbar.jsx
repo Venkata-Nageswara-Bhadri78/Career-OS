@@ -1,112 +1,124 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AUTH_PATHS } from "../../../modules/auth/config/authConfig";
-import { useAuth } from "../../../modules/auth/hooks/useAuth";
+import { APP_PATHS } from "../../config/appPaths";
+import { SHELL_BRAND } from "../../config/shellConfig";
+import { useShellSession } from "../../session/useShellSession";
+import { getDisplayName, getNameInitial } from "../../utils/identity";
+import { ChevronIcon, MenuIcon } from "./ShellIcons";
 
-export default function Navbar({ onToggleSidebar }) {
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useRef(null);
+export default function Navbar({ onToggleSidebar, isSidebarOpen }) {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef(null);
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, signOut } = useShellSession();
+  const menuId = useId();
+  const displayName = getDisplayName(user);
+  const initial = getNameInitial(user);
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false);
+    const onPointerDown = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsMenuOpen(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") setIsMenuOpen(false);
+    };
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
   }, []);
 
+  const go = (path) => {
+    setIsMenuOpen(false);
+    navigate(path);
+  };
+
   const handleLogout = async () => {
+    setIsMenuOpen(false);
     try {
       await signOut();
     } finally {
-      navigate(AUTH_PATHS.LOGIN, { replace: true });
+      navigate(APP_PATHS.LOGIN, { replace: true });
     }
   };
 
-  const displayName = user?.fullName || user?.username || "Account";
-
   return (
-    <header className="w-full h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8 bg-transparent">
-      <div className="flex items-center gap-3">
-        {onToggleSidebar ? (
-          <button
-            type="button"
-            onClick={onToggleSidebar}
-            title="Toggle Sidebar"
-            className="p-2 -ml-2 rounded-xl border border-transparent text-zinc-500 hover:text-ink hover:bg-zinc-100 transition-colors focus:outline-none shrink-0"
-          >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-        ) : null}
-        <div className="h-8 w-8 bg-ink flex items-center justify-center text-white font-bold text-sm shrink-0">C</div>
-        <div className="ml-1">
-          <span className="font-bold text-sm text-ink tracking-tight block leading-tight">Career OS</span>
-          <span className="text-[10px] text-muted font-medium">Job Management</span>
+    <header className="w-full h-16 flex items-center justify-between px-3 sm:px-5 bg-transparent">
+      <div className="flex items-center gap-3 min-w-0">
+        <button
+          type="button"
+          onClick={onToggleSidebar}
+          aria-controls="workspace-sidebar"
+          aria-expanded={Boolean(isSidebarOpen)}
+          aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
+          className="p-2 -ml-1 rounded-xl text-muted hover:text-ink hover:bg-field transition-colors"
+        >
+          <MenuIcon className="w-5 h-5" />
+        </button>
+        <div className="h-8 w-8 bg-ink text-white font-bold text-sm shrink-0 grid place-items-center" aria-hidden="true">
+          {SHELL_BRAND.letter}
+        </div>
+        <div className="min-w-0">
+          <span className="font-bold text-sm text-ink tracking-tight block leading-tight truncate">{SHELL_BRAND.name}</span>
+          <span className="text-[10px] text-muted font-medium hidden sm:block">{SHELL_BRAND.tagline}</span>
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
-        <div className="relative" ref={dropdownRef}>
-          <button
-            type="button"
-            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            title={displayName}
-            aria-haspopup="menu"
-            aria-expanded={isDropdownOpen}
-            className="flex items-center gap-2 p-2 rounded-xl border border-line text-zinc-500 hover:text-ink hover:bg-zinc-100 transition-colors focus:outline-none"
-          >
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-              />
-            </svg>
-            <span className="hidden sm:block text-xs font-semibold text-ink max-w-[140px] truncate">{displayName}</span>
-          </button>
+      <div className="relative shrink-0" ref={menuRef}>
+        <button
+          type="button"
+          onClick={() => setIsMenuOpen((open) => !open)}
+          aria-haspopup="menu"
+          aria-expanded={isMenuOpen}
+          aria-controls={menuId}
+          className={`flex items-center gap-2 pl-1 pr-2 py-1 rounded-full border transition-colors ${
+            isMenuOpen ? "border-accent bg-field" : "border-line hover:bg-field"
+          }`}
+        >
+          <span className="h-8 w-8 rounded-full bg-ink text-white text-sm font-semibold grid place-items-center">
+            {initial}
+          </span>
+          <span className="hidden sm:block text-xs font-semibold text-ink max-w-[140px] truncate">{displayName}</span>
+          <ChevronIcon className={`h-4 w-4 text-muted transition-transform ${isMenuOpen ? "rotate-180" : ""}`} />
+        </button>
 
-          {isDropdownOpen ? (
-            <div className="absolute right-0 mt-2 w-48 bg-white border border-line rounded-xl shadow-lg py-1 z-50" role="menu">
-              <button
-                type="button"
-                onClick={() => {
-                  setIsDropdownOpen(false);
-                  navigate("/profile");
-                }}
-                className="w-full text-left px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-100 hover:text-ink transition-colors"
-              >
-                User Profile
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setIsDropdownOpen(false);
-                  navigate(AUTH_PATHS.SETTINGS);
-                }}
-                className="w-full text-left px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-100 hover:text-ink transition-colors"
-              >
-                Settings
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setIsDropdownOpen(false);
-                  handleLogout();
-                }}
-                className="w-full text-left px-4 py-2 text-sm text-danger hover:bg-red-50 transition-colors"
-              >
-                Logout
-              </button>
-            </div>
-          ) : null}
-        </div>
+        {isMenuOpen ? (
+          <div
+            id={menuId}
+            role="menu"
+            aria-label="Account"
+            className="absolute right-0 mt-2 w-48 bg-white border border-line rounded-xl shadow-lg py-1 z-50"
+          >
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => go(APP_PATHS.PROFILE)}
+              className="w-full text-left px-4 py-2 text-sm text-ink/80 hover:bg-field hover:text-ink transition-colors"
+            >
+              Profile
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => go(APP_PATHS.SETTINGS)}
+              className="w-full text-left px-4 py-2 text-sm text-ink/80 hover:bg-field hover:text-ink transition-colors"
+            >
+              Settings
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              onClick={handleLogout}
+              className="w-full text-left px-4 py-2 text-sm text-danger hover:bg-red-50 transition-colors"
+            >
+              Logout
+            </button>
+          </div>
+        ) : null}
       </div>
     </header>
   );

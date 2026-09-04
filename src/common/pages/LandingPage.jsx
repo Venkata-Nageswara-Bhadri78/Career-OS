@@ -1,7 +1,6 @@
-import { Link, Navigate } from "react-router-dom";
-import { AUTH_PATHS } from "../../modules/auth/config/authConfig";
-import AuthBootScreen from "../../modules/auth/components/loaders/AuthBootScreen";
-import { useAuth } from "../../modules/auth/hooks/useAuth";
+import { Link } from "react-router-dom";
+import { APP_PATHS } from "../config/appPaths";
+import { SHELL_BRAND } from "../config/shellConfig";
 
 const FEATURES = [
   {
@@ -27,11 +26,6 @@ const FEATURES = [
 ];
 
 export default function LandingPage() {
-  const { isAuthenticated, isBooting } = useAuth();
-
-  if (isBooting) return <AuthBootScreen />;
-  if (isAuthenticated) return <Navigate to={AUTH_PATHS.DASHBOARD} replace />;
-
   return (
     <div className="min-h-screen bg-ink text-white font-sans">
       <header className="flex items-center justify-between px-6 sm:px-10 py-6">
@@ -43,13 +37,13 @@ export default function LandingPage() {
         </div>
         <nav className="flex items-center gap-3" aria-label="Account">
           <Link
-            to={AUTH_PATHS.LOGIN}
+            to={APP_PATHS.LOGIN}
             className="h-10 px-5 border border-white/30 text-white font-display text-sm tracking-[0.16em] uppercase flex items-center hover:border-accent hover:text-accent"
           >
             Login
           </Link>
           <Link
-            to={AUTH_PATHS.REGISTER}
+            to={APP_PATHS.REGISTER}
             className="h-10 px-5 bg-white text-ink font-display text-sm tracking-[0.16em] uppercase flex items-center hover:bg-accent"
           >
             Register
@@ -64,8 +58,8 @@ export default function LandingPage() {
             Run your job search like a system, not a scramble.
           </h1>
           <p className="mt-6 max-w-2xl text-white/70 text-lg leading-8">
-            Career-OS brings jobs, resumes, interviews, and follow-ups into a single workspace. Sign up, verify your
-            email, and start with a clean, private session.
+            {SHELL_BRAND.name} brings jobs, resumes, interviews, and follow-ups into a single workspace. Sign up, verify
+            your email, and start with a clean, private session.
           </p>
         </section>
 
@@ -86,13 +80,13 @@ export default function LandingPage() {
           </div>
           <div className="flex gap-3">
             <Link
-              to={AUTH_PATHS.REGISTER}
+              to={APP_PATHS.REGISTER}
               className="h-11 px-6 bg-accent text-ink font-display tracking-[0.16em] uppercase flex items-center"
             >
               Register
             </Link>
             <Link
-              to={AUTH_PATHS.LOGIN}
+              to={APP_PATHS.LOGIN}
               className="h-11 px-6 border border-white/30 font-display tracking-[0.16em] uppercase flex items-center"
             >
               Login
@@ -100,6 +94,15 @@ export default function LandingPage() {
           </div>
         </section>
       </main>
+
+      <footer className="px-6 sm:px-10 py-6 border-t border-white/10 flex flex-wrap gap-4 text-sm text-white/55">
+        <Link to={APP_PATHS.TERMS} className="hover:text-accent">
+          Terms
+        </Link>
+        <Link to={APP_PATHS.PRIVACY} className="hover:text-accent">
+          Privacy
+        </Link>
+      </footer>
     </div>
   );
 }

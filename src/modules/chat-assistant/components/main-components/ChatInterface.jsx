@@ -3,13 +3,9 @@ import ChatMessage from "./ChatMessage";
 import ChatInputBar from "./ChatInputBar";
 import { fetchJobChatHistory, sendJobChatMessage } from "../../api/chatAssistantApi";
 import ChatSkeleton from "../skeletons/ChatSkeleton";
+import { emitShellEvent, SHELL_EVENTS } from "../../../../common/utils/shellEvents";
 
-export default function ChatInterface({ 
-  jobId, 
-  onChatUpdated,
-  isSidebarOpen,
-  onToggleSidebar
-}) {
+export default function ChatInterface({ jobId, onChatUpdated }) {
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
@@ -68,6 +64,7 @@ export default function ChatInterface({
           { type: "user", content: latestTurn.userPrompt, turn: latestTurn.turnNumber },
           { type: "ai", content: latestTurn.aiResponse, turn: latestTurn.turnNumber }
         ]);
+        emitShellEvent(SHELL_EVENTS.CHAT_HISTORY_CHANGED);
         if (onChatUpdated) {
           onChatUpdated();
         }
@@ -88,21 +85,6 @@ export default function ChatInterface({
 
   return (
     <div className="flex-1 flex flex-col h-full bg-white relative">
-      {/* Sidebar Toggle Button */}
-      {!isSidebarOpen && (
-        <button
-          type="button"
-          onClick={onToggleSidebar}
-          title="Open Sidebar"
-          className="absolute top-3 left-3 z-30 p-2 rounded-xl bg-white border border-zinc-200 text-zinc-600 hover:text-black hover:bg-zinc-100 hover:shadow-xs transition-all flex items-center gap-1.5 text-xs font-medium"
-        >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h7" />
-          </svg>
-          <span className="hidden sm:inline">Sidebar</span>
-        </button>
-      )}
-
       {/* Messages Scroll Area */}
       <div 
         ref={scrollRef}

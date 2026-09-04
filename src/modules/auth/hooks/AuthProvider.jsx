@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import "../api/registerSessionBridge";
 import authApi from "../api/authApi";
 import { subscribeToSessionEnd } from "../api/authSession";
 import { AuthContext } from "./authContext";

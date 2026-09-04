@@ -19,12 +19,14 @@ export function getThemeById(id) {
 }
 
 export function applyTheme(themeId) {
+  if (typeof document === "undefined") return getThemeById(themeId);
   const theme = getThemeById(themeId);
   const root = document.documentElement;
   root.dataset.theme = theme.id;
   root.style.setProperty("--theme-bg", THEME_BG);
   root.style.setProperty("--theme-ink", theme.ink);
   root.style.setProperty("--theme-accent", THEME_ACCENT);
+  return theme;
 }
 
 export function readStoredThemeId() {

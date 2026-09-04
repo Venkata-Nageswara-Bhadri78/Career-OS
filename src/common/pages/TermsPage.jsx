@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { APP_PATHS } from "../config/appPaths";
 
 export default function TermsPage() {
   return (
@@ -9,9 +10,14 @@ export default function TermsPage() {
         This placeholder exists so registration can link to a real route. Replace this copy with your production terms
         before launch.
       </p>
-      <Link to="/register" className="inline-block mt-8 text-sm font-semibold underline">
-        Back to register
-      </Link>
+      <div className="mt-8 flex flex-wrap gap-4 text-sm font-semibold">
+        <Link to={APP_PATHS.LANDING} className="underline">
+          Home
+        </Link>
+        <Link to={APP_PATHS.REGISTER} className="underline">
+          Back to register
+        </Link>
+      </div>
     </main>
   );
 }

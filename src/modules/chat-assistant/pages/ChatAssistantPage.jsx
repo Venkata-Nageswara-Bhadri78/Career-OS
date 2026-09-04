@@ -5,7 +5,7 @@ import JobDetailsDrawer from "../../jobs/components/main-components/JobDetailsDr
 import jobApi from "../../jobs/api/jobApi";
 
 export default function ChatAssistantPage({ initialJobId = null }) {
-  const [selectedJobId, setSelectedJobId] = useState(initialJobId);
+  const selectedJobId = initialJobId;
   const [job, setJob] = useState(null);
   const [isLoadingJob, setIsLoadingJob] = useState(Boolean(initialJobId));
   const [isJobModalOpen, setIsJobModalOpen] = useState(false);
@@ -37,18 +37,8 @@ export default function ChatAssistantPage({ initialJobId = null }) {
     return () => { ignore = true; };
   }, [selectedJobId]);
 
-  const handleSelectJob = (jobId) => {
-    setSelectedJobId(jobId);
-  };
-
-  const handleChatDeleted = (jobId) => {
-    if (selectedJobId === jobId) {
-      setSelectedJobId(null);
-    }
-  };
-
   return (
-    <div className="h-full w-full flex flex-col bg-white font-sans text-zinc-900 overflow-hidden select-none rounded-xl border border-zinc-200 shadow-sm">
+    <div className="h-full w-full flex flex-col bg-white font-sans text-zinc-900 overflow-hidden select-none">
       <ChatJobBanner
         job={job}
         isLoading={isLoadingJob}
@@ -56,11 +46,7 @@ export default function ChatAssistantPage({ initialJobId = null }) {
       />
 
       <div className="flex-1 flex overflow-hidden relative">
-        <ChatInterface 
-          jobId={selectedJobId} 
-          isSidebarOpen={true}
-          onToggleSidebar={() => {}}
-        />
+        <ChatInterface jobId={selectedJobId} />
       </div>
 
       <JobDetailsDrawer

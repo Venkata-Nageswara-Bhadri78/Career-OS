@@ -9,7 +9,11 @@ import {
 } from "./themeConfig";
 
 export default function ThemeProvider({ children }) {
-  const [themeId, setThemeId] = useState(readStoredThemeId);
+  const [themeId, setThemeId] = useState(() => {
+    const initial = getThemeById(readStoredThemeId()).id;
+    applyTheme(initial);
+    return initial;
+  });
 
   const setTheme = useCallback((nextId) => {
     const resolved = getThemeById(nextId).id;

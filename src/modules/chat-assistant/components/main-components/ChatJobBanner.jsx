@@ -1,82 +1,87 @@
-import { useNavigate } from "react-router-dom";
+import { ChatIconButton, ClearIcon, ExportIcon, ShortcutsIcon } from "../common/ChatIcons";
 
-export default function ChatJobBanner({ job, isLoading, onOpenDetails }) {
-  const navigate = useNavigate();
+function Field({ children, className = "" }) {
+  if (!children) return null;
+  return <span className={`truncate text-[12px] ${className}`}>{children}</span>;
+}
+
+export default function ChatJobBanner({
+  job,
+  fallbackTitle,
+  fallbackCompany,
+  hasJob,
+  isLoading,
+  canClear,
+  canExport,
+  isClearing,
+  olderTurnsHiddenFromModel,
+  onOpenDetails,
+  onClear,
+  onExport,
+  onShortcuts,
+}) {
+  const title = job?.title || fallbackTitle;
+  const company = job?.company || fallbackCompany;
+  const location = job?.location;
+  const experience = job?.experience;
+  const contextNote =
+    olderTurnsHiddenFromModel > 0
+      ? `${olderTurnsHiddenFromModel} older turn${olderTurnsHiddenFromModel === 1 ? "" : "s"} stay visible but no longer inform new answers`
+      : "Conversation for one saved job";
 
   return (
-    <div className="w-full border-b border-zinc-200/80 bg-white/95 backdrop-blur-md px-4 sm:px-6 py-2 shrink-0 z-20">
-      <div className="max-w-7xl mx-auto flex items-center justify-between gap-3 flex-nowrap">
-        {/* Left Side: Back & Opportunity Brief (Single Line) */}
-        <div className="flex items-center gap-2.5 min-w-0 flex-nowrap shrink">
-
+    <div className="w-full border-b border-line bg-bg/95 backdrop-blur-md px-3 sm:px-5 h-12 shrink-0 z-20">
+      <div className="h-full flex items-center gap-3">
+        <div className="flex items-center min-w-0 flex-1 overflow-hidden" title={contextNote}>
           {isLoading ? (
-            <div className="flex items-center gap-2 shrink-0">
-              <div className="h-4 w-28 bg-zinc-200 rounded animate-pulse" />
-              <div className="h-3 w-16 bg-zinc-100 rounded animate-pulse" />
+            <div className="flex items-center gap-6">
+              <div className="h-3.5 w-28 bg-field rounded animate-pulse" />
+              <div className="h-3.5 w-24 bg-field rounded animate-pulse" />
+              <div className="h-3.5 w-20 bg-field rounded animate-pulse" />
             </div>
-          ) : job ? (
-            <div className="flex items-center gap-2 min-w-0 flex-nowrap overflow-hidden">
-              <span className="font-bold text-xs text-zinc-900 truncate shrink">
-                {job.title}
+          ) : hasJob ? (
+            <div className="flex items-center gap-5 sm:gap-8 min-w-0 w-full overflow-hidden">
+              <button
+                type="button"
+                onClick={onOpenDetails}
+                className="min-w-0 max-w-[28%] text-left"
+                title="View job details"
+              >
+                <Field className="block font-bold text-ink">{title || "Saved job"}</Field>
+              </button>
+              <Field className="max-w-[18%] text-ink/80">{company}</Field>
+              <Field className="max-w-[16%] text-muted hidden sm:inline">{location}</Field>
+              <Field className="max-w-[14%] text-muted hidden md:inline">{experience}</Field>
+              <span className="shrink-0 text-[11px] font-bold tracking-[0.14em] uppercase text-ink">
+                RESUME
               </span>
-              <span className="text-zinc-300 text-xs shrink-0">•</span>
-              <span className="text-xs text-zinc-600 truncate shrink-0">
-                {job.company}
-              </span>
-              {job.location && (
-                <>
-                  <span className="text-zinc-300 text-xs shrink-0 hidden md:inline">•</span>
-                  <span className="text-xs text-zinc-500 truncate shrink-0 hidden md:inline">
-                    {job.location}
-                  </span>
-                </>
-              )}
-              {job.salary && (
-                <span className="font-semibold text-[11px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 shrink-0 hidden sm:inline">
-                  {job.salary}
-                </span>
-              )}
             </div>
           ) : (
-            <div className="text-xs font-semibold text-zinc-800 truncate">
-              General Career Copilot Session
-            </div>
+            <p className="text-[12px] font-semibold text-ink truncate">Select a saved job to start a private thread</p>
           )}
         </div>
 
-        {/* Right Side: Skills & View Details Button (Single Line) */}
-        <div className="flex items-center gap-2 shrink-0 flex-nowrap">
-          {job?.skills && job.skills.length > 0 && (
-            <div className="hidden lg:flex items-center gap-1 shrink-0">
-              {job.skills.slice(0, 3).map((skill, index) => (
-                <span
-                  key={index}
-                  className="px-2 py-0.5 text-[10px] font-medium rounded-md bg-zinc-100 text-zinc-700 border border-zinc-200/80 whitespace-nowrap"
-                >
-                  {skill}
-                </span>
-              ))}
-              {job.skills.length > 3 && (
-                <span className="text-[10px] text-zinc-400 font-medium whitespace-nowrap">
-                  +{job.skills.length - 3}
-                </span>
-              )}
-            </div>
-          )}
-
-          {job && (
-            <button
-              type="button"
-              onClick={onOpenDetails}
-              className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-lg bg-zinc-900 text-white hover:bg-zinc-800 active:scale-95 transition-all shadow-xs shrink-0 whitespace-nowrap"
-            >
-              <svg className="h-3.5 w-3.5 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-              <span>View Full Details</span>
-            </button>
-          )}
+        <div className="flex items-center gap-1 shrink-0">
+          <ChatIconButton label="Keyboard shortcuts" onClick={onShortcuts} className="h-8 w-8">
+            <ShortcutsIcon className="h-4 w-4" />
+          </ChatIconButton>
+          <ChatIconButton
+            label="Export conversation"
+            onClick={onExport}
+            disabled={!hasJob || !canExport}
+            className="h-8 w-8"
+          >
+            <ExportIcon className="h-4 w-4" />
+          </ChatIconButton>
+          <ChatIconButton
+            label={isClearing ? "Clearing conversation" : "Clear conversation"}
+            onClick={onClear}
+            disabled={!canClear || isClearing}
+            tone="danger"
+            className="h-8 w-8"
+          >
+            <ClearIcon className="h-4 w-4" />
+          </ChatIconButton>
         </div>
       </div>
     </div>

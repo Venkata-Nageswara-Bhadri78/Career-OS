@@ -1,141 +1,135 @@
 import { useState } from "react";
-import UserProfileApi from "../../api/userProfileApi";
-import Spinner from "../loaders/Spinner";
+import { USER_LIMITS } from "../../config/userConfig";
+import { hostnameFromHref, parseFieldErrors, validateHttpUrl } from "../../utils/formatters";
+import ConfirmDialog from "../common/ConfirmDialog";
+import FormField, { fieldClassName } from "../common/FormField";
+import InlineEditor from "../common/InlineEditor";
+import SafeExternalLink from "../common/SafeExternalLink";
+import { IconLink, IconPencil, IconTrash } from "../common/UserIcons";
+import EmptyState from "../sub-components/EmptyState";
+import SectionAddButton from "../sub-components/SectionAddButton";
+import SectionHeader from "../sub-components/SectionHeader";
 
-export default function ProfileLinksSection({ links = [], onSuccess }) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState(null);
-  
-  const [editingId, setEditingId] = useState(null);
-  
-  const [formData, setFormData] = useState({
-    url: ""
-  });
+export default function ProfileLinksSection({ items = [], error = "", onAdd, onUpdate, onDelete }) {
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [url, setUrl] = useState("");
+  const [localError, setLocalError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState(null);
+  const atCap = items.length >= USER_LIMITS.CHILD_CAP;
 
-  const handleOpenAdd = () => {
-    setFormData({ url: "" });
-    setEditingId(null);
-    setError(null);
-    setIsModalOpen(true);
+  const closeEditor = () => {
+    setOpen(false);
+    setEditing(null);
+    setUrl("");
+    setLocalError("");
   };
 
-  const handleOpenEdit = (linkItem) => {
-    setFormData({
-      url: linkItem.url || ""
-    });
-    setEditingId(linkItem.id);
-    setError(null);
-    setIsModalOpen(true);
+  const requestClose = () => {
+    if (saving) return;
+    closeEditor();
   };
 
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+  const openAdd = () => {
+    if (atCap) return;
+    setEditing(null);
+    setUrl("");
+    setLocalError("");
+    setOpen(true);
+  };
 
-  const handleSave = async (e) => {
-    e.preventDefault();
-    if (!formData.url) {
-      setError("URL is required.");
+  const openEdit = (item) => {
+    setEditing(item);
+    setUrl(item.url || "");
+    setLocalError("");
+    setOpen(true);
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    const urlErr = validateHttpUrl(url, { required: true });
+    if (urlErr) {
+      setLocalError(urlErr);
       return;
     }
-
-    try {
-      setIsSaving(true);
-      setError(null);
-      if (editingId) {
-        await UserProfileApi.updateLink(editingId, formData);
-        onSuccess("Link updated successfully ✔");
-      } else {
-        await UserProfileApi.addLink(formData);
-        onSuccess("Link added successfully ✔");
-      }
-      setIsModalOpen(false);
-    } catch (err) {
-      setError(err?.message || "Failed to save link.");
-    } finally {
-      setIsSaving(false);
-    }
+    setSaving(true);
+    setLocalError("");
+    const result = editing ? await onUpdate(editing.id, { url }) : await onAdd({ url });
+    setSaving(false);
+    if (result?.ok) closeEditor();
+    else setLocalError(result?.message || "Failed to save link.");
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Delete this link?")) return;
-    try {
-      await UserProfileApi.deleteLink(id);
-      onSuccess("Link deleted successfully ✔");
-    } catch (err) {
-      alert(err?.message || "Failed to delete.");
-    }
-  };
+  const fieldErrors = parseFieldErrors(localError || error);
+
+  const editor = (
+    <InlineEditor
+      title={editing ? "Edit link" : "Add link"}
+      onSubmit={handleSubmit}
+      onCancel={requestClose}
+      busy={saving}
+      error={localError || error}
+    >
+      <FormField id="profileUrl" label="URL" required error={fieldErrors.url}>
+        {({ id }) => <input id={id} autoFocus required type="url" maxLength={USER_LIMITS.URL_MAX} className={fieldClassName} value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://" />}
+      </FormField>
+    </InlineEditor>
+  );
 
   return (
-    <div className="bg-white rounded-3xl p-6 md:p-8 border border-zinc-200/60 shadow-sm relative">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h2 className="text-xl font-bold text-zinc-900 tracking-tight">Profile Links</h2>
-          <p className="text-sm text-zinc-500 mt-1">LinkedIn, GitHub, Portfolio, etc.</p>
-        </div>
-        <button 
-          onClick={handleOpenAdd}
-          className="bg-black hover:bg-zinc-800 text-white text-xs font-medium px-4 py-2 rounded-xl transition-colors shadow-sm"
-        >
-          + Add
-        </button>
-      </div>
+    <section className={`user-paired-section rounded-2xl border border-line bg-white p-5 shadow-sm sm:p-6${open ? " is-editing" : ""}`}>
+      <SectionHeader
+        icon={<IconLink className="h-5 w-5" />}
+        title="Profile links"
+        action={<SectionAddButton label="Add link" onClick={openAdd} disabled={atCap || (open && !editing)} />}
+      />
+      {atCap ? <p className="mb-2 text-xs text-muted">Maximum of 20 profile link records allowed.</p> : null}
 
-      <div className="flex flex-wrap gap-4">
-        {links.length === 0 ? (
-          <div className="w-full text-center py-10 bg-zinc-50/50 rounded-2xl border border-dashed border-zinc-200">
-            <p className="text-sm text-zinc-500 mb-3">No links added yet.</p>
-            <button onClick={handleOpenAdd} className="text-xs font-medium text-black hover:underline">
-              Add your first link
-            </button>
-          </div>
-        ) : (
-          links.map((linkItem) => (
-            <div key={linkItem.id} className="group flex items-center justify-between gap-4 p-4 rounded-xl border border-zinc-200/60 bg-zinc-50/50 hover:bg-zinc-100 hover:border-zinc-300 transition-all w-full md:w-[calc(50%-0.5rem)]">
-              <a href={linkItem.url} target="_blank" rel="noopener noreferrer" className="text-sm text-zinc-700 font-medium hover:text-black hover:underline truncate" title={linkItem.url}>
-                {linkItem.url}
-              </a>
-              <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                <button onClick={() => handleOpenEdit(linkItem)} className="p-1 text-zinc-400 hover:text-black bg-white shadow-sm border border-zinc-200 hover:border-zinc-300 rounded-md">
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+      <div className="user-paired-body space-y-3 pr-1">
+        {open && !editing ? editor : null}
+        {items.length === 0 && !open ? (
+          <EmptyState
+            compact
+            icon={<IconLink className="h-8 w-8" />}
+            message="No links added yet. Add LinkedIn, GitHub, or a portfolio URL."
+            actionLabel="+ Add your first link"
+            onAction={openAdd}
+            disabled={atCap}
+          />
+        ) : null}
+        {items.map((item) =>
+          open && editing?.id === item.id ? (
+            <div key={item.id}>{editor}</div>
+          ) : (
+            <div key={item.id} className="flex items-center justify-between gap-3 rounded-xl border border-line bg-field/40 p-4">
+              <SafeExternalLink href={item.url} className="min-w-0 text-sm font-medium">
+                {hostnameFromHref(item.url) || item.url}
+              </SafeExternalLink>
+              <div className="flex shrink-0 gap-1">
+                <button type="button" onClick={() => openEdit(item)} className="rounded-lg p-1.5 text-muted hover:bg-white hover:text-ink" aria-label="Edit link">
+                  <IconPencil className="h-3.5 w-3.5" />
                 </button>
-                <button onClick={() => handleDelete(linkItem.id)} className="p-1 text-zinc-400 hover:text-red-600 bg-white shadow-sm border border-zinc-200 hover:border-red-200 rounded-md">
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                <button type="button" onClick={() => setPendingDelete(item)} className="rounded-lg p-1.5 text-muted hover:bg-danger/10 hover:text-danger" aria-label="Delete link">
+                  <IconTrash className="h-3.5 w-3.5" />
                 </button>
               </div>
             </div>
-          ))
+          )
         )}
       </div>
 
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="px-6 py-4 border-b border-zinc-100 flex justify-between items-center bg-zinc-50/50">
-              <h3 className="font-bold text-zinc-900">{editingId ? "Edit" : "Add"} Link</h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-zinc-400 hover:text-black">✕</button>
-            </div>
-            
-            <div className="p-6 overflow-y-auto">
-              {error && <div className="text-red-500 text-xs mb-4 bg-red-50 p-3 rounded-xl border border-red-100">{error}</div>}
-              <form id="link-form" onSubmit={handleSave} className="space-y-4">
-                <div>
-                  <label className="text-xs font-bold text-zinc-600 uppercase tracking-wider mb-1.5 block">URL *</label>
-                  <input required type="url" name="url" value={formData.url} onChange={handleChange} maxLength={500} placeholder="https://" className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black/5" />
-                </div>
-              </form>
-            </div>
-            
-            <div className="px-6 py-4 border-t border-zinc-100 flex justify-end gap-3 bg-white">
-              <button onClick={() => setIsModalOpen(false)} disabled={isSaving} className="px-5 py-2.5 text-sm font-medium text-zinc-600 hover:bg-zinc-100 rounded-xl transition-colors">Cancel</button>
-              <button type="submit" form="link-form" disabled={isSaving} className="px-5 py-2.5 text-sm font-medium bg-black text-white hover:bg-zinc-800 rounded-xl transition-colors flex items-center gap-2">
-                {isSaving && <Spinner className="w-4 h-4 text-white" />}
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+      <ConfirmDialog
+        open={Boolean(pendingDelete)}
+        title="Delete profile link"
+        message="This removes the URL from your career folder."
+        confirmLabel="Delete link"
+        onClose={() => setPendingDelete(null)}
+        onConfirm={async () => {
+          const result = await onDelete(pendingDelete.id);
+          if (result?.ok) setPendingDelete(null);
+        }}
+      />
+    </section>
   );
 }

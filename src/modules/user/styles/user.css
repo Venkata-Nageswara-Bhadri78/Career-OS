@@ -1,0 +1,67 @@
+.user-service {
+  color: var(--theme-ink);
+}
+
+main:has(.user-service) {
+  scrollbar-width: none;
+}
+
+main:has(.user-service)::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.user-hide-scrollbar {
+  scrollbar-width: none;
+}
+
+.user-hide-scrollbar::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.user-service :is(button, a, input, textarea, select):focus-visible {
+  outline: 2px solid var(--theme-accent);
+  outline-offset: 2px;
+}
+
+.user-completeness-ring {
+  transform: rotate(-90deg);
+}
+
+.user-modal-backdrop {
+  background: color-mix(in srgb, var(--theme-ink) 42%, transparent);
+}
+
+.user-paired-section {
+  display: flex;
+  flex-direction: column;
+  min-height: 24.75rem;
+  max-height: 24.75rem;
+}
+
+.user-paired-section.is-editing {
+  max-height: none;
+}
+
+.user-paired-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--theme-ink) 28%, transparent) transparent;
+}
+
+.user-paired-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.user-paired-body::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--theme-ink) 28%, transparent);
+  border-radius: 999px;
+}

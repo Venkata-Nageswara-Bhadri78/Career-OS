@@ -19,7 +19,7 @@ import {
   ChatHistoryShellBinder,
 } from "./modules/chat-assistant/routes/chatAssistantRoutes";
 import { AiRouteTree } from "./modules/ai/routes/aiRoutes";
-import UserProfileIndex from "./modules/user/components/UserProfileIndex";
+import { UserRouteTree } from "./modules/user/routes/userRoutes";
 
 function LandingRoute() {
   const { isAuthenticated, isBooting } = useAuth();
@@ -79,7 +79,7 @@ function App() {
             <Route element={<ProtectedRoute />}>
               <Route element={<ProtectedAppShell />}>
                 <Route path={APP_PATHS.DASHBOARD} element={<JobsDashboardEntry />} />
-                <Route path={APP_PATHS.PROFILE} element={<UserProfileIndex />} />
+                {UserRouteTree()}
                 {CommonProtectedRoutes()}
                 <Route path="/jobs" element={<Navigate to={APP_PATHS.DASHBOARD} replace />} />
                 {ChatAssistantRouteTree()}

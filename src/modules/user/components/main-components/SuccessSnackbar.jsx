@@ -1,21 +1,27 @@
-export default function SuccessSnackbar({ message, onDismiss }) {
+import { IconCheck, IconClose } from "../common/UserIcons";
+
+export default function SuccessSnackbar({ message, tone = "success", onDismiss }) {
   if (!message) return null;
 
+  const isError = tone === "danger";
+
   return (
-    <div className="fixed top-6 right-6 z-60 flex items-center gap-3 px-4 py-2.5 rounded-xl bg-black text-white text-xs shadow-2xl animate-in fade-in slide-in-from-top-4 duration-200">
-      <span className="h-5 w-5 rounded-full bg-emerald-400 flex items-center justify-center shrink-0">
-        <svg className="h-3 w-3 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-        </svg>
+    <div
+      className={`fixed top-6 right-6 z-60 flex max-w-sm items-center gap-3 rounded-xl px-4 py-2.5 text-xs text-white shadow-2xl ${
+        isError ? "bg-danger" : "bg-ink"
+      }`}
+      role={isError ? "alert" : "status"}
+    >
+      <span
+        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${
+          isError ? "bg-white/15 text-white" : "bg-accent text-ink"
+        }`}
+      >
+        {isError ? <IconClose className="h-3 w-3" /> : <IconCheck className="h-3 w-3" />}
       </span>
       <span className="font-medium">{message}</span>
-      <button
-        type="button"
-        onClick={onDismiss}
-        className="ml-1 text-zinc-400 hover:text-white transition-colors text-sm leading-none"
-        title="Dismiss"
-      >
-        ✕
+      <button type="button" onClick={onDismiss} className="ml-1 text-white/70 hover:text-white" aria-label="Dismiss">
+        <IconClose className="h-3.5 w-3.5" />
       </button>
     </div>
   );

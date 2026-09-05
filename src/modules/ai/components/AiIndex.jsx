@@ -1,10 +1,7 @@
 import AiChatPage from "../pages/AiChatPage";
 
 export { default as AiChatPage } from "../pages/AiChatPage";
-export { default as AiRouter } from "../routes/AiRouter";
-export { default as AiChatInterface } from "./main-components/AiChatInterface";
-export { default as AiJobBanner } from "./main-components/AiJobBanner";
-export { default as JobDetailsDrawer } from "../../jobs/components/main-components/JobDetailsDrawer";
+export { AiRouteTree } from "../routes/aiRoutes";
 
 export default function AiIndex() {
   return <AiChatPage />;

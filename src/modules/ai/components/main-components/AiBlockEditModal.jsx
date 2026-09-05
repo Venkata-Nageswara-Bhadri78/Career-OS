@@ -1,20 +1,26 @@
-import { useState, useEffect } from "react";
-import { copyToClipboard } from "../../helpers/aiFormatters";
+import { useEffect, useId, useState } from "react";
+import { copyToClipboard, wordCount } from "../../utils/formatters";
+import { CloseIcon } from "../common/AiIcons";
 
-export default function AiBlockEditModal({ isOpen, initialText, title = "Edit Generated Content", onClose }) {
+export default function AiBlockEditModal({ isOpen, initialText, title = "Edit generated content", onClose }) {
   const [text, setText] = useState(initialText || "");
+  const [source, setSource] = useState(initialText || "");
   const [copied, setCopied] = useState(false);
+  const titleId = useId();
+  const fieldId = useId();
 
-  useEffect(() => {
+  if ((initialText || "") !== source) {
+    setSource(initialText || "");
     setText(initialText || "");
-  }, [initialText]);
+  }
 
   useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === "Escape" && isOpen) onClose();
+    if (!isOpen) return undefined;
+    const onKey = (event) => {
+      if (event.key === "Escape") onClose?.();
     };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
@@ -23,73 +29,54 @@ export default function AiBlockEditModal({ isOpen, initialText, title = "Edit Ge
     const ok = await copyToClipboard(text);
     if (ok) {
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      window.setTimeout(() => setCopied(false), 1600);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
-      <div className="absolute inset-0" onClick={onClose} />
-
-      <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-zinc-200 overflow-hidden flex flex-col max-h-[90vh] z-10 animate-in zoom-in-95 duration-150">
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-zinc-100 bg-zinc-50/70">
-          <div className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-black" />
-            <h3 className="text-xs font-bold text-zinc-900">{title}</h3>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1 rounded-lg text-zinc-400 hover:text-black hover:bg-zinc-200/60 transition-colors"
-          >
-            ✕
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/45"
+      role="presentation"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose?.();
+      }}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className="relative w-full max-w-2xl bg-bg rounded-2xl border border-line shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+      >
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-line">
+          <h3 id={titleId} className="text-xs font-bold text-ink">
+            {title}
+          </h3>
+          <button type="button" onClick={onClose} className="p-1 rounded-lg text-muted hover:text-ink" aria-label="Close">
+            <CloseIcon />
           </button>
         </div>
-
-        {/* Edit Body */}
         <div className="p-5 flex-1 flex flex-col overflow-hidden">
-          <label className="block text-[11px] font-semibold text-zinc-500 mb-1.5 uppercase tracking-wider">
-            Edit text below to tailor to your needs:
+          <label htmlFor={fieldId} className="block text-[11px] font-semibold text-muted mb-1.5 uppercase tracking-wider">
+            Edit text, then copy
           </label>
           <textarea
+            id={fieldId}
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={(event) => setText(event.target.value)}
             rows={14}
-            className="w-full flex-1 p-3.5 rounded-xl bg-zinc-50 border border-zinc-200 focus:bg-white focus:border-black focus:outline-none transition-all text-xs font-sans leading-relaxed text-zinc-900 resize-none"
+            className="ai-scroll w-full flex-1 p-3.5 rounded-xl bg-field border border-line text-xs leading-relaxed text-ink resize-none"
           />
         </div>
-
-        {/* Footer Actions */}
-        <div className="flex items-center justify-between px-5 py-3.5 border-t border-zinc-100 bg-zinc-50/70">
-          <span className="text-[11px] text-zinc-400">
-            {text.length} characters • {text.trim().split(/\s+/).filter(Boolean).length} words
+        <div className="flex items-center justify-between px-5 py-3.5 border-t border-line">
+          <span className="text-[11px] text-muted">
+            {text.length} characters · {wordCount(text)} words
           </span>
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-3.5 py-1.5 text-xs font-medium rounded-xl border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-100 transition-colors"
-            >
+            <button type="button" onClick={onClose} className="h-9 px-3.5 rounded-xl border border-line text-xs font-semibold">
               Cancel
             </button>
-            <button
-              type="button"
-              onClick={handleCopy}
-              className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold rounded-xl bg-black text-white hover:bg-zinc-800 transition-all shadow-xs"
-            >
-              {copied ? (
-                <>
-                  <span className="text-emerald-300 font-bold">✓ Copied to Clipboard!</span>
-                </>
-              ) : (
-                <>
-                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                  <span>Copy Customized Text</span>
-                </>
-              )}
+            <button type="button" onClick={handleCopy} className="h-9 px-4 rounded-xl bg-ink text-white text-xs font-semibold">
+              {copied ? "Copied" : "Copy"}
             </button>
           </div>
         </div>

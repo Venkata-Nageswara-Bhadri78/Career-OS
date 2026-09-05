@@ -1,0 +1,62 @@
+.ai-service {
+  color: var(--theme-ink);
+  background: var(--theme-bg);
+}
+
+.ai-service,
+.ai-service * {
+  scrollbar-width: none;
+}
+
+.ai-service::-webkit-scrollbar,
+.ai-service *::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.ai-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--theme-ink) 28%, transparent) transparent;
+}
+
+.ai-scroll::-webkit-scrollbar {
+  display: block;
+  width: 8px;
+  height: 8px;
+}
+
+.ai-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.ai-scroll::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--theme-ink) 22%, transparent);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.ai-code-pre {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, #fff 28%, transparent) transparent;
+}
+
+.ai-code-pre::-webkit-scrollbar {
+  display: block;
+  height: 8px;
+  width: 8px;
+}
+
+.ai-code-pre::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, #fff 30%, transparent);
+  border-radius: 999px;
+}
+
+.ai-mode-scroll {
+  scrollbar-width: none;
+}
+
+.ai-mode-scroll::-webkit-scrollbar {
+  display: none;
+}

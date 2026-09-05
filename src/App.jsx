@@ -18,6 +18,7 @@ import {
   ChatAssistantRouteTree,
   ChatHistoryShellBinder,
 } from "./modules/chat-assistant/routes/chatAssistantRoutes";
+import { AiRouteTree } from "./modules/ai/routes/aiRoutes";
 import UserProfileIndex from "./modules/user/components/UserProfileIndex";
 
 function LandingRoute() {
@@ -82,6 +83,7 @@ function App() {
                 {CommonProtectedRoutes()}
                 <Route path="/jobs" element={<Navigate to={APP_PATHS.DASHBOARD} replace />} />
                 {ChatAssistantRouteTree()}
+                {AiRouteTree()}
               </Route>
             </Route>
 

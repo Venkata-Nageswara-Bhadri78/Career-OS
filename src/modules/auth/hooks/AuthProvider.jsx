@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import "../api/registerSessionBridge";
 import authApi from "../api/authApi";
 import { subscribeToSessionEnd } from "../api/authSession";
+import { mintAndPushExtensionToken } from "../api/extensionTokenHandoff";
 import { AuthContext } from "./authContext";
 
 export function AuthProvider({ children }) {
+  const location = useLocation();
   const [user, setUser] = useState(null);
   const [status, setStatus] = useState("booting");
 
@@ -34,6 +37,11 @@ export function AuthProvider({ children }) {
   }, []);
 
   useEffect(() => subscribeToSessionEnd(becomeGuest), [becomeGuest]);
+
+  useEffect(() => {
+    if (status !== "authenticated") return undefined;
+    void mintAndPushExtensionToken();
+  }, [status, location.search]);
 
   const signIn = useCallback(
     async (payload) => {

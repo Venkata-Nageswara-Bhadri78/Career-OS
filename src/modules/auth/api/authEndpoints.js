@@ -7,6 +7,7 @@ export const AUTH_BASE_PATH = "/api/v1/auth";
 export const AUTH_ENDPOINTS = Object.freeze({
   REGISTER: `${AUTH_BASE_PATH}/register`,
   LOGIN: `${AUTH_BASE_PATH}/login`,
+  EXTENSION_TOKEN: `${AUTH_BASE_PATH}/extension-token`,
   VERIFY_EMAIL: `${AUTH_BASE_PATH}/verify-email`,
   RESEND_OTP: `${AUTH_BASE_PATH}/resend-otp`,
   FORGOT_PASSWORD: `${AUTH_BASE_PATH}/forgot-password`,

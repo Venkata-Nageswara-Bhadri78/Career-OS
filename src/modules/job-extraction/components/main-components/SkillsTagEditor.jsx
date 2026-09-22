@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 
 import { JOB_EXTRACTION_LIMITS } from "../../config/jobExtractionConfig";
+import { joinJobSkills } from "../../../jobs/utils/formatters";
 
 export default function SkillsTagEditor({ skills = [], onChange, className = "" }) {
   const [draft, setDraft] = useState("");
@@ -10,8 +11,9 @@ export default function SkillsTagEditor({ skills = [], onChange, className = "" 
     const trimmed = draft.trim().slice(0, JOB_EXTRACTION_LIMITS.SKILL_MAX);
     setDraft("");
     if (!trimmed || skills.includes(trimmed)) return;
-    if (skills.length >= JOB_EXTRACTION_LIMITS.SKILLS_MAX_COUNT) return;
-    onChange([...skills, trimmed]);
+    const next = [...skills, trimmed];
+    if (joinJobSkills(next).length > JOB_EXTRACTION_LIMITS.SKILLS_MAX_LENGTH) return;
+    onChange(next);
   };
 
   const handleKeyDown = (e) => {

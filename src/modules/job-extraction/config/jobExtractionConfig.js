@@ -14,7 +14,8 @@ export const JOB_EXTRACTION_LIMITS = Object.freeze({
   SOURCE_PLATFORM_MAX: 50,
   DESCRIPTION_MAX: 50000,
   SKILL_MAX: 255,
-  SKILLS_MAX_COUNT: 50,
+  /** Matches backend `JobLimits.MAX_SKILLS_LENGTH` (Jobs and extraction). */
+  SKILLS_MAX_LENGTH: 15_000,
 });
 
 /** Backend AI timeout is ~60s; allow headroom for network. */

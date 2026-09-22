@@ -6,6 +6,7 @@ import {
   WORK_MODE_SUGGESTIONS,
 } from "../../config/jobExtractionConfig";
 import { validateReviewForm } from "../../mappers/jobExtractionMapper";
+import { joinJobSkills, splitJobSkills } from "../../../jobs/utils/formatters";
 
 function FieldRow({ label, required = false, children, error, highlight = false }) {
   return (
@@ -255,8 +256,8 @@ export default function JobReviewForm({
 
         <FieldRow label="Skills" error={validationErrors.skills}>
           <SkillsTagEditor
-            skills={data.skills || []}
-            onChange={(skills) => handleFieldChange("skills", skills)}
+            skills={splitJobSkills(data.skills)}
+            onChange={(chips) => handleFieldChange("skills", joinJobSkills(chips))}
           />
         </FieldRow>
 

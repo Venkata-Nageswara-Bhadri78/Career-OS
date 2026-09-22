@@ -1,6 +1,8 @@
 export const JOBS_PAGE_SIZE = 10;
 export const JOBS_MAX_FETCH_SIZE = 50;
 export const JOBS_SEARCH_MAX_LENGTH = 100;
+/** Matches backend `JobLimits.MAX_SKILLS_LENGTH`. */
+export const JOBS_SKILLS_MAX_LENGTH = 15_000;
 export const JOBS_VIEW_MODE_STORAGE_KEY = "career-os-jobs-view-mode";
 export const JOBS_SEARCH_DEBOUNCE_MS = 300;
 

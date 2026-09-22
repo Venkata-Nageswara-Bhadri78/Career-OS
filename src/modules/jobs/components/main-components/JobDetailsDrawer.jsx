@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import InlineEditableCell from "./InlineEditableCell";
 import { JobSkillsField } from "../common/JobSkillsField";
-import { formatDate, copyToClipboard, isSafeHttpUrl } from "../../utils/formatters";
+import { formatDate, copyToClipboard, isSafeHttpUrl, splitJobSkills } from "../../utils/formatters";
 import { mergeJobSummary } from "../../mappers/jobMapper";
 import jobApi from "../../api/jobApi";
 import Spinner from "../../../../common/components/loaders/Spinner";
@@ -267,7 +267,7 @@ export default function JobDetailsDrawer({
                 <div className="w-full min-w-0">
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="text-xs font-bold text-zinc-900">
-                      Required Skills ({job.skills?.length || 0})
+                      Required Skills ({splitJobSkills(job.skills).length})
                     </h4>
                     <span className="text-[10px] text-zinc-400">Click + Add or × to edit</span>
                   </div>

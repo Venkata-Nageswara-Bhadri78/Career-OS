@@ -1,3 +1,11 @@
+import { joinJobSkills } from "../utils/formatters";
+
+function asJobSkillsString(value, fallback = "") {
+  if (typeof value === "string") return value;
+  if (Array.isArray(value)) return joinJobSkills(value);
+  return fallback;
+}
+
 /**
  * Merge a full job update response into list-row shape.
  * @param {import("../types/jobTypes").JobSummary} existing
@@ -16,7 +24,7 @@ export function mergeJobSummary(existing, updated) {
     experience: updated.experience ?? existing?.experience,
     salary: updated.salary ?? existing?.salary,
     sourcePlatform: updated.sourcePlatform ?? existing?.sourcePlatform,
-    skills: Array.isArray(updated.skills) ? updated.skills : existing?.skills ?? [],
+    skills: updated.skills != null ? asJobSkillsString(updated.skills) : asJobSkillsString(existing?.skills, ""),
     createdAt: updated.createdAt ?? existing?.createdAt,
   };
 }

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import jobApi from "../api/jobApi";
 import Spinner from "../../../common/components/loaders/Spinner";
+import { splitJobSkills } from "../utils/formatters";
 
 export default function JobInteractPage() {
   const { jobId } = useParams();
@@ -74,17 +75,19 @@ export default function JobInteractPage() {
     setTimeout(() => {
       let reply;
       const lower = text.toLowerCase();
+      const skillList = splitJobSkills(job?.skills);
+      const skillsOr = (fallback) => (skillList.length ? skillList : fallback);
 
       if (lower.includes("interview") || lower.includes("question")) {
-        reply = `Here are targeted interview questions for **${job?.title || "this role"}** based on the required skills (${(job?.skills || ["core technologies"]).join(", ")}):\n\n1. **Architecture & System Design**: How would you design a scalable microservice handling high-throughput requests?\n2. **Technical Deep Dive**: Can you describe a complex problem you solved using ${(job?.skills?.[0] || "modern frameworks")}?\n3. **Behavioral**: Tell me about a time you had to align technical debt with tight delivery deadlines.`;
+        reply = `Here are targeted interview questions for **${job?.title || "this role"}** based on the required skills (${skillsOr(["core technologies"]).join(", ")}):\n\n1. **Architecture & System Design**: How would you design a scalable microservice handling high-throughput requests?\n2. **Technical Deep Dive**: Can you describe a complex problem you solved using ${skillList[0] || "modern frameworks"}?\n3. **Behavioral**: Tell me about a time you had to align technical debt with tight delivery deadlines.`;
       } else if (lower.includes("resume") || lower.includes("bullet")) {
-        reply = `Here are 3 high-impact resume bullet points tailored for **${job?.company || "this company"}**:\n\n• Architected and deployed scalable backend services using ${(job?.skills?.[0] || "Java/Spring Boot")}, reducing API latency by 35%.\n• Collaborated across engineering teams to deliver mission-critical features with 99.9% uptime.\n• Implemented automated CI/CD pipelines and unit test suites, boosting team deployment frequency by 2x.`;
+        reply = `Here are 3 high-impact resume bullet points tailored for **${job?.company || "this company"}**:\n\n• Architected and deployed scalable backend services using ${skillList[0] || "Java/Spring Boot"}, reducing API latency by 35%.\n• Collaborated across engineering teams to deliver mission-critical features with 99.9% uptime.\n• Implemented automated CI/CD pipelines and unit test suites, boosting team deployment frequency by 2x.`;
       } else if (lower.includes("cover letter") || lower.includes("letter")) {
-        reply = `**Draft Cover Letter for ${job?.company || "Hiring Team"}:**\n\nDear Hiring Manager,\n\nI am writing to express my strong enthusiasm for the **${job?.title || "Software Engineer"}** position at **${job?.company || "your team"}**. With my proven experience in ${(job?.skills || ["full stack development"]).slice(0, 3).join(", ")}, I am confident in my ability to immediately contribute to your engineering initiatives.\n\nI look forward to discussing how my background aligns with your team's goals.\n\nSincerely,\n[Your Name]`;
+        reply = `**Draft Cover Letter for ${job?.company || "Hiring Team"}:**\n\nDear Hiring Manager,\n\nI am writing to express my strong enthusiasm for the **${job?.title || "Software Engineer"}** position at **${job?.company || "your team"}**. With my proven experience in ${skillsOr(["full stack development"]).slice(0, 3).join(", ")}, I am confident in my ability to immediately contribute to your engineering initiatives.\n\nI look forward to discussing how my background aligns with your team's goals.\n\nSincerely,\n[Your Name]`;
       } else if (lower.includes("salary") || lower.includes("negotiat") || lower.includes("pay")) {
-        reply = `**Salary Negotiation Strategy for ${job?.salary || "this market range"}:**\n\n1. **Benchmark**: Research total compensation (base + bonus + equity) for ${job?.location || "this region"}.\n2. **Value Proposition**: Highlight specific experience with high-demand skills like ${(job?.skills || []).slice(0, 2).join(" & ")}.\n3. **Tactical Response**: "Based on the scope of this role and market benchmarks, I am targeting the top tier of this range (${job?.salary || "$140k+"})."`;
+        reply = `**Salary Negotiation Strategy for ${job?.salary || "this market range"}:**\n\n1. **Benchmark**: Research total compensation (base + bonus + equity) for ${job?.location || "this region"}.\n2. **Value Proposition**: Highlight specific experience with high-demand skills like ${skillList.slice(0, 2).join(" & ")}.\n3. **Tactical Response**: "Based on the scope of this role and market benchmarks, I am targeting the top tier of this range (${job?.salary || "$140k+"})."`;
       } else {
-        reply = `Great question regarding **${job?.title || "this position"}**. When applying to **${job?.company || "top tech companies"}**, ensure you emphasize practical projects involving ${(job?.skills || ["your core tech stack"]).slice(0, 3).join(", ")}, measurable business impact, and clear system architecture principles.`;
+        reply = `Great question regarding **${job?.title || "this position"}**. When applying to **${job?.company || "top tech companies"}**, ensure you emphasize practical projects involving ${skillsOr(["your core tech stack"]).slice(0, 3).join(", ")}, measurable business impact, and clear system architecture principles.`;
       }
 
       const aiMsg = {
@@ -105,6 +108,7 @@ export default function JobInteractPage() {
     "Draft Cover Letter",
     "Salary Negotiation Strategy",
   ];
+  const bannerSkills = splitJobSkills(job?.skills);
 
   return (
     <div className="min-h-screen bg-zinc-100 font-sans text-black flex flex-col">
@@ -157,9 +161,9 @@ export default function JobInteractPage() {
                 </>
               )}
             </div>
-            {job.skills && job.skills.length > 0 && (
+            {bannerSkills.length > 0 && (
               <div className="flex flex-wrap gap-1">
-                {job.skills.slice(0, 5).map((s, i) => (
+                {bannerSkills.slice(0, 5).map((s, i) => (
                   <span key={i} className="px-1.5 py-0.5 text-[10px] rounded bg-zinc-100 text-zinc-700 border border-zinc-200">
                     {s}
                   </span>

@@ -1,4 +1,5 @@
 import { JOB_EXTRACTION_LIMITS } from "../config/jobExtractionConfig";
+import { joinJobSkills } from "../../jobs/utils/formatters";
 
 const FIELD_LIMITS = Object.freeze({
   title: JOB_EXTRACTION_LIMITS.TITLE_MAX,
@@ -38,9 +39,7 @@ function parseFieldErrors(message) {
 
 export function mapExtractionResult(data) {
   if (!data || typeof data !== "object") return null;
-  const skills = Array.isArray(data.skills)
-    ? data.skills.map((s) => asString(s).trim()).filter(Boolean)
-    : [];
+  const skills = typeof data.skills === "string" ? data.skills : joinJobSkills(data.skills);
 
   return {
     sourceUrl: asString(data.sourceUrl),
@@ -90,9 +89,8 @@ export function toJobRequest(preview) {
     if (value) payload[key] = value;
   });
 
-  if (Array.isArray(rest.skills) && rest.skills.length > 0) {
-    payload.skills = rest.skills.map((s) => asString(s).trim()).filter(Boolean);
-  }
+  const skills = asString(rest.skills);
+  if (skills.trim()) payload.skills = skills;
 
   return payload;
 }
@@ -131,15 +129,10 @@ export function validateReviewForm(data) {
     }
   });
 
-  const skills = Array.isArray(data?.skills) ? data.skills : [];
-  if (skills.length > JOB_EXTRACTION_LIMITS.SKILLS_MAX_COUNT) {
-    errors.skills = `At most ${JOB_EXTRACTION_LIMITS.SKILLS_MAX_COUNT} skills allowed.`;
+  const skillsText = typeof data?.skills === "string" ? data.skills : joinJobSkills(data?.skills);
+  if (skillsText.length > JOB_EXTRACTION_LIMITS.SKILLS_MAX_LENGTH) {
+    errors.skills = `Skills cannot exceed ${JOB_EXTRACTION_LIMITS.SKILLS_MAX_LENGTH} characters.`;
   }
-  skills.forEach((skill, idx) => {
-    if (asString(skill).length > JOB_EXTRACTION_LIMITS.SKILL_MAX) {
-      errors.skills = `Each skill must be at most ${JOB_EXTRACTION_LIMITS.SKILL_MAX} characters.`;
-    }
-  });
 
   return errors;
 }

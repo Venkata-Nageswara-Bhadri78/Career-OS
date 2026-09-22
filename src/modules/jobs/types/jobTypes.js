@@ -9,7 +9,7 @@
  * @property {string} [experience]
  * @property {string} [salary]
  * @property {string} [sourcePlatform]
- * @property {string[]} skills
+ * @property {string} skills Comma-separated skills string (`""` when none).
  * @property {string} createdAt
  */
 
@@ -50,7 +50,7 @@
  * @property {string} [department]
  * @property {string} [industry]
  * @property {string} [sourcePlatform]
- * @property {string[]} [skills]
+ * @property {string} [skills] Comma-separated skills string (`""` when none).
  */
 
 export {};

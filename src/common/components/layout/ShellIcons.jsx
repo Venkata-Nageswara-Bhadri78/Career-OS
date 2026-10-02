@@ -37,6 +37,20 @@ export function ProfileIcon(props) {
   );
 }
 
+export function CustomPromptsIcon(props) {
+  return (
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true" {...props}>
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={1.8}
+        d="M8 3h6l5 5v11a2 2 0 01-2 2H8a2 2 0 01-2-2V5a2 2 0 012-2z"
+      />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M14 3v5h5M9 13h6M9 17h4" />
+    </svg>
+  );
+}
+
 export function SettingsIcon(props) {
   return (
     <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true" {...props}>

@@ -9,6 +9,7 @@ export const SHELL_BRAND = Object.freeze({
 export const SHELL_NAV_ITEMS = Object.freeze([
   { id: "dashboard", name: "Dashboard", path: APP_PATHS.DASHBOARD, icon: "dashboard" },
   { id: "ai", name: "AI Assistant", path: APP_PATHS.AI, icon: "ai" },
+  { id: "custom-prompts", name: "Custom Prompts", path: APP_PATHS.CUSTOM_PROMPTS, icon: "custom-prompts" },
   { id: "profile", name: "Profile", path: APP_PATHS.PROFILE, icon: "profile" },
 ]);
 

@@ -1,6 +1,6 @@
-import { useEffect, useId, useRef, useState } from "react";
-import { STARTER_PROMPTS } from "../../config/chatAssistantConfig";
-import { AttachIcon, ChatIconButton, TemplatesIcon, ToolsIcon } from "../common/ChatIcons";
+import { useEffect, useRef } from "react";
+import { AttachIcon, ChatIconButton, ToolsIcon } from "../common/ChatIcons";
+import CustomPromptPicker from "../sub-components/CustomPromptPicker";
 
 export default function ChatInputBar({
   value,
@@ -16,9 +16,6 @@ export default function ChatInputBar({
   onComingSoon,
 }) {
   const textareaRef = useRef(null);
-  const [templatesOpen, setTemplatesOpen] = useState(false);
-  const templatesId = useId();
-  const templatesRef = useRef(null);
   const length = value.length;
   const overLimit = length > promptLimit;
 
@@ -43,14 +40,12 @@ export default function ChatInputBar({
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  useEffect(() => {
-    if (!templatesOpen) return undefined;
-    const onPointer = (event) => {
-      if (!templatesRef.current?.contains(event.target)) setTemplatesOpen(false);
-    };
-    document.addEventListener("mousedown", onPointer);
-    return () => document.removeEventListener("mousedown", onPointer);
-  }, [templatesOpen]);
+  const insertPrompt = (prompt) => {
+    const current = value || "";
+    const next = current.trim() ? `${current.replace(/\s+$/, "")}\n\n${prompt}` : prompt;
+    onChange?.(next);
+    textareaRef.current?.focus();
+  };
 
   const submit = () => {
     if (!canSend) return;
@@ -66,46 +61,13 @@ export default function ChatInputBar({
           </p>
         ) : null}
         <div className="flex flex-wrap items-center gap-0.5 mb-2">
-          <div className="relative" ref={templatesRef}>
-            <ChatIconButton
-              label="Prompt templates"
-              aria-expanded={templatesOpen}
-              aria-controls={templatesId}
-              className="h-8 w-8"
-              onClick={() => setTemplatesOpen((open) => !open)}
-            >
-              <TemplatesIcon />
-            </ChatIconButton>
-            {templatesOpen ? (
-              <div
-                id={templatesId}
-                role="menu"
-                className="absolute bottom-full mb-1 z-20 w-56 rounded-xl border border-line bg-bg shadow-lg p-1"
-              >
-                {STARTER_PROMPTS.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    role="menuitem"
-                    className="w-full text-left px-2.5 py-2 text-xs rounded-lg hover:bg-field"
-                    onClick={() => {
-                      onChange?.(item.prompt);
-                      setTemplatesOpen(false);
-                      textareaRef.current?.focus();
-                    }}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-            ) : null}
-          </div>
           <ChatIconButton label="Attach a file" className="h-8 w-8" onClick={onComingSoon}>
             <AttachIcon />
           </ChatIconButton>
           <ChatIconButton label="Tools" className="h-8 w-8" onClick={onComingSoon}>
             <ToolsIcon />
           </ChatIconButton>
+          <CustomPromptPicker onSelect={insertPrompt} />
           <p className="ml-auto text-[10px] text-muted hidden sm:block">Enter to send · Shift+Enter for a new line · / focuses the composer</p>
         </div>
 

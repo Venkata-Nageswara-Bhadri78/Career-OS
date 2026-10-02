@@ -47,7 +47,7 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen }) {
   };
 
   return (
-    <header className="w-full h-16 flex items-center justify-between px-3 sm:px-5 bg-transparent">
+    <header className="relative z-40 w-full h-16 flex items-center justify-between px-3 sm:px-5 bg-transparent overflow-visible">
       <div className="flex items-center gap-3 min-w-0">
         <button
           type="button"

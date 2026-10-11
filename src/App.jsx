@@ -13,6 +13,7 @@ import { APP_PATHS } from "./common/config/appPaths";
 import { CommonProtectedRoutes, CommonPublicRoutes } from "./common/routes/commonRoutes";
 import LandingPage from "./common/pages/LandingPage";
 import JobDashboardPage from "./modules/jobs/pages/JobDashboardPage";
+import JobDetailsPage from "./modules/jobs/pages/JobDetailsPage";
 import JobDraftsPage from "./modules/job-drafts/pages/JobDraftsPage";
 import AddJobModal from "./modules/job-extraction/components/main-components/AddJobModal";
 import {
@@ -109,6 +110,7 @@ function App() {
                 {CommonProtectedRoutes()}
                 <Route path="/jobs" element={<Navigate to={APP_PATHS.DASHBOARD} replace />} />
                 {ChatAssistantRouteTree()}
+                <Route path="/jobs/:jobId" element={<JobDetailsPage />} />
                 {AiRouteTree()}
               </Route>
             </Route>

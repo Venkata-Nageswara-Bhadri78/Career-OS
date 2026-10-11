@@ -4,6 +4,7 @@ import { get, post, put, patch, del } from "../../../common/api/httpClient";
 import { unwrapApiResponse } from "../../../common/api/unwrapApiResponse";
 import { parseJobStatus } from "../config/jobStatus";
 import { joinJobSkills } from "../utils/formatters";
+import { normalizeJob } from "../mappers/jobMapper";
 
 function withSkillsString(jobData) {
   if (!jobData || typeof jobData !== "object" || !("skills" in jobData)) return jobData;
@@ -11,14 +12,6 @@ function withSkillsString(jobData) {
   return {
     ...jobData,
     skills: typeof skills === "string" ? skills : joinJobSkills(skills),
-  };
-}
-
-function normalizeJob(job) {
-  if (!job || typeof job !== "object") return job;
-  return {
-    ...job,
-    skills: typeof job.skills === "string" ? job.skills : joinJobSkills(job.skills),
   };
 }
 

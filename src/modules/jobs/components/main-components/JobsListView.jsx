@@ -52,7 +52,7 @@ export default function JobsListView({
       <table className="w-full table-fixed text-left border-collapse">
         <thead className="sticky top-0 z-10">
           <tr className="border-b border-line bg-field/95 backdrop-blur-sm">
-            <th className="py-2 px-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted w-[18%]">
+            <th className="py-2 px-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted w-[20%]">
               Job title
             </th>
             <th className="py-2 px-1 text-[10px] font-semibold uppercase tracking-wide text-muted w-[10%]">Company</th>
@@ -60,7 +60,7 @@ export default function JobsListView({
             <th className="py-2 px-1 text-[10px] font-semibold uppercase tracking-wide text-muted w-[8%]">Salary</th>
             <th className="py-2 px-1 text-[10px] font-semibold uppercase tracking-wide text-muted w-[8%]">Experience</th>
             <th className="py-2 px-1 text-[10px] font-semibold uppercase tracking-wide text-muted w-[14%]">Skills</th>
-            <th className="py-2 px-1 text-[10px] font-semibold uppercase tracking-wide text-muted w-[12%]">Job status</th>
+            <th className="py-2 px-1 text-[10px] font-semibold uppercase tracking-wide text-muted w-[10%]">Job status</th>
             <th className="py-2 px-1 text-center text-[10px] font-semibold uppercase tracking-wide text-muted w-[6%]" title="Resume to job score">
               Score
             </th>

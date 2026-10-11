@@ -1,10 +1,33 @@
 /* Override global gold :focus-visible ring inside the jobs dashboard */
-.jobs-panel :is(button, input, select, textarea):focus-visible {
+.jobs-panel :is(button, input, select, textarea):focus-visible,
+.job-details-drawer :is(button, input, select, textarea):focus-visible {
   outline: none;
 }
 
-.jobs-panel :is(input, select, textarea):focus {
+.jobs-panel :is(input, select, textarea):focus,
+.job-details-drawer :is(button, input, select, textarea):focus {
   outline: none;
+  box-shadow: none;
+}
+
+.job-details-drawer {
+  overscroll-behavior: none;
+  touch-action: none;
+}
+
+.job-details-drawer .overscroll-contain {
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+}
+
+.job-details-drawer,
+.job-details-drawer * {
+  scrollbar-width: none;
+}
+
+.job-details-drawer::-webkit-scrollbar,
+.job-details-drawer *::-webkit-scrollbar {
+  display: none;
 }
 
 .job-grid-card .truncate {

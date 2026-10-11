@@ -6,35 +6,68 @@ function asJobSkillsString(value, fallback = "") {
   return fallback;
 }
 
+function asDisplayText(value) {
+  if (value == null) return value;
+  if (typeof value === "string") return value;
+  if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  return value;
+}
+
+function pickText(record, keys) {
+  for (const key of keys) {
+    if (!Object.prototype.hasOwnProperty.call(record, key)) continue;
+    const value = asDisplayText(record[key]);
+    if (typeof value === "string") return value;
+  }
+  return undefined;
+}
+
 /**
- * Merge a full job update response into list-row shape.
+ * Normalize a job payload from GET/PATCH so detail fields are always on the camelCase keys the UI reads.
+ * @param {unknown} job
+ */
+export function normalizeJob(job) {
+  if (!job || typeof job !== "object") return job;
+  const education = pickText(job, ["education", "jobEducation", "requiredEducation"]);
+  const department = pickText(job, ["department", "jobDepartment", "dept"]);
+  const industry = pickText(job, ["industry", "jobIndustry"]);
+  const sourcePlatform = pickText(job, ["sourcePlatform", "source_platform"]);
+  return {
+    ...job,
+    ...("skills" in job
+      ? { skills: typeof job.skills === "string" ? job.skills : joinJobSkills(job.skills) }
+      : {}),
+    ...(education !== undefined ? { education } : {}),
+    ...(department !== undefined ? { department } : {}),
+    ...(industry !== undefined ? { industry } : {}),
+    ...(sourcePlatform !== undefined ? { sourcePlatform } : {}),
+  };
+}
+
+/**
+ * Merge a job update response into the current job without dropping detail fields
+ * (education, department, industry, descriptions, etc.).
  * @param {import("../types/jobTypes").JobSummary} existing
  * @param {import("../types/jobTypes").Job} updated
  */
 export function mergeJobSummary(existing, updated) {
-  if (!updated?.id) return existing;
-  return {
-    ...existing,
-    id: updated.id,
-    title: updated.title ?? existing?.title,
-    company: updated.company ?? existing?.company,
-    location: updated.location ?? existing?.location,
-    employmentType: updated.employmentType ?? existing?.employmentType,
-    workMode: updated.workMode ?? existing?.workMode,
-    experience: updated.experience ?? existing?.experience,
-    salary: updated.salary ?? existing?.salary,
-    sourcePlatform: updated.sourcePlatform ?? existing?.sourcePlatform,
-    skills: updated.skills != null ? asJobSkillsString(updated.skills) : asJobSkillsString(existing?.skills, ""),
-    createdAt: updated.createdAt ?? existing?.createdAt,
-    jobStatus: updated.jobStatus ?? existing?.jobStatus,
-    customStatus: Object.prototype.hasOwnProperty.call(updated, "customStatus")
-      ? updated.customStatus
-      : existing?.customStatus,
-    resumeToJobScore: updated.resumeToJobScore ?? existing?.resumeToJobScore,
-    notes: Object.prototype.hasOwnProperty.call(updated, "notes") ? updated.notes : existing?.notes,
-    resume: Object.prototype.hasOwnProperty.call(updated, "resume") ? updated.resume : existing?.resume,
-    updatedAt: updated.updatedAt ?? existing?.updatedAt,
-  };
+  if (!updated || typeof updated !== "object") return existing;
+  const base = existing && typeof existing === "object" ? existing : {};
+  const incoming = normalizeJob(updated);
+  const next = { ...base };
+
+  Object.entries(incoming).forEach(([key, value]) => {
+    if (value === undefined) return;
+    next[key] = value;
+  });
+
+  if (base.id && !next.id) next.id = base.id;
+  if (Object.prototype.hasOwnProperty.call(incoming, "skills")) {
+    next.skills = asJobSkillsString(incoming.skills, "");
+  } else if (base.skills != null) {
+    next.skills = asJobSkillsString(base.skills, "");
+  }
+  return next;
 }
 
 /**

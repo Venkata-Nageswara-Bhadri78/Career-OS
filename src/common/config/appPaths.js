@@ -10,8 +10,13 @@ export const APP_PATHS = Object.freeze({
   AI: "/ai",
   CUSTOM_PROMPTS: "/custom-prompts",
   JOB_DRAFTS: "/job-drafts",
+  jobDetails: (jobId) => `/jobs/${encodeURIComponent(String(jobId))}`,
   jobChat: (jobId) => `/jobs/${encodeURIComponent(String(jobId))}/interact`,
 });
+
+export function isJobDetailsPath(pathname) {
+  return /^\/jobs\/\d+\/?$/.test(pathname || "");
+}
 
 export function isJobChatPath(pathname) {
   return /^\/jobs\/\d+\/interact\/?$/.test(pathname || "");

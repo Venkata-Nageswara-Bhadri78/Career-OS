@@ -9,12 +9,12 @@ export default function ResumeMatchScore({ score, compact = false }) {
     : "Resume to job score unavailable";
 
   return (
-    <div className={compact ? "inline-flex shrink-0" : "flex shrink-0 flex-col items-center gap-1.5"}>
+    <div className={compact ? "inline-flex shrink-0" : "flex shrink-0 flex-col items-center gap-0.5"}>
       <div
         className={
           compact
             ? "grid h-5 w-5 place-items-center rounded-full"
-            : "grid h-16 w-16 place-items-center rounded-full"
+            : "grid h-10 w-10 place-items-center rounded-full"
         }
         style={{
           background: `conic-gradient(${color} ${progress}deg, #e5e7eb ${progress}deg)`,
@@ -25,12 +25,12 @@ export default function ResumeMatchScore({ score, compact = false }) {
       >
         <div
           className={`flex flex-col items-center justify-center rounded-full bg-white ${
-            compact ? "h-[calc(100%-3px)] w-[calc(100%-3px)]" : "h-[calc(100%-8px)] w-[calc(100%-8px)]"
+            compact ? "h-[calc(100%-3px)] w-[calc(100%-3px)]" : "h-[calc(100%-5px)] w-[calc(100%-5px)]"
           }`}
         >
           <span
             className={`font-bold leading-none tabular-nums ${
-              compact ? "text-[8px]" : "text-base"
+              compact ? "text-[8px]" : "text-[11px]"
             }`}
             style={{ color: band ? band.text : "#6b7280" }}
           >
@@ -39,7 +39,7 @@ export default function ResumeMatchScore({ score, compact = false }) {
         </div>
       </div>
       {compact ? null : (
-        <span className="max-w-16 text-center text-[10px] leading-tight text-muted">
+        <span className="max-w-10 text-center text-[9px] leading-tight text-muted">
           {band?.label ?? "No score"}
         </span>
       )}

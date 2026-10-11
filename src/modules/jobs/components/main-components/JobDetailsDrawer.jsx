@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import InlineEditableCell from "./InlineEditableCell";
 import { JobSkillsField } from "../common/JobSkillsField";
 import { formatDate, copyToClipboard, isSafeHttpUrl, splitJobSkills } from "../../utils/formatters";
@@ -11,6 +11,7 @@ import {
   JOBS_EMPLOYMENT_TYPE_PRESETS,
   JOBS_WORK_MODE_PRESETS,
 } from "../../config/jobsConfig";
+import "../../styles/jobs.css";
 
 export default function JobDetailsDrawer({
   isOpen,
@@ -18,7 +19,9 @@ export default function JobDetailsDrawer({
   job: initialJob = null,
   onClose,
   onJobUpdated,
+  variant = "drawer",
 }) {
+  const isPage = variant === "page";
   const [job, setJob] = useState(initialJob || null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -58,12 +61,42 @@ export default function JobDetailsDrawer({
 
   // Escape key handler
   useEffect(() => {
+    if (isPage) return undefined;
     const handleKeyDown = (e) => {
       if (e.key === "Escape" && isOpen) onClose();
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [isOpen, isPage, onClose]);
+
+  const panelRef = useRef(null);
+
+  useEffect(() => {
+    if (!isOpen || isPage) return undefined;
+    const html = document.documentElement;
+    const { overflow: prevHtmlOverflow, overscrollBehavior: prevHtmlOverscroll } = html.style;
+    const { overflow: prevBodyOverflow, overscrollBehavior: prevBodyOverscroll } = document.body.style;
+    html.style.overflow = "hidden";
+    html.style.overscrollBehavior = "none";
+    document.body.style.overflow = "hidden";
+    document.body.style.overscrollBehavior = "none";
+
+    const stopChainedScroll = (event) => {
+      if (panelRef.current?.contains(event.target)) return;
+      event.preventDefault();
+    };
+    document.addEventListener("wheel", stopChainedScroll, { passive: false });
+    document.addEventListener("touchmove", stopChainedScroll, { passive: false });
+
+    return () => {
+      html.style.overflow = prevHtmlOverflow;
+      html.style.overscrollBehavior = prevHtmlOverscroll;
+      document.body.style.overflow = prevBodyOverflow;
+      document.body.style.overscrollBehavior = prevBodyOverscroll;
+      document.removeEventListener("wheel", stopChainedScroll);
+      document.removeEventListener("touchmove", stopChainedScroll);
+    };
+  }, [isOpen, isPage]);
 
   const handleFieldUpdate = async (fieldUpdater, val, fieldKey) => {
     if (!job) return;
@@ -79,6 +112,9 @@ export default function JobDetailsDrawer({
         patch[fieldKey] = val;
       }
       const merged = mergeJobSummary(job, patch);
+      if (fieldKey && fieldKey !== "jobStatus" && typeof val !== "object") {
+        merged[fieldKey] = patch[fieldKey] != null ? patch[fieldKey] : val;
+      }
       setJob(merged);
       if (onJobUpdated) onJobUpdated(merged);
     } catch (err) {
@@ -96,15 +132,24 @@ export default function JobDetailsDrawer({
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 overflow-hidden bg-black/40 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="absolute inset-0" onClick={onClose} />
-
-      <div className="absolute inset-y-0 right-0 max-w-full flex pl-6 sm:pl-10">
-        <div className="w-screen max-w-xl bg-white border-l border-zinc-200 shadow-2xl p-6 flex flex-col justify-between overflow-y-auto overflow-x-hidden hide-scrollbar animate-in slide-in-from-right duration-250 ease-out">
-          <div className="min-w-0">
+  const detailsBody = (
+    <>
+          <div className={`min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain hide-scrollbar ${isPage ? "p-4 sm:p-6" : ""}`}>
             {/* Header */}
-            <div className="flex items-start gap-3 pb-4 border-b border-zinc-100 min-w-0">
+            <div className={`${isPage ? "flex flex-col gap-2" : "flex items-start gap-3"} pb-4 border-b border-zinc-100 min-w-0`}>
+              {isPage ? (
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="inline-flex w-fit shrink-0 items-center gap-1 rounded-lg px-1.5 py-1 text-xs font-semibold text-ink hover:bg-field"
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                  </svg>
+                  Back
+                </button>
+              ) : null}
+              <div className={isPage ? "flex min-w-0 items-start gap-3" : "contents"}>
               <div className="min-w-0 pr-3 flex-1">
                 {(job?.createdAt || job?.updatedAt) && (
                   <div className="text-[11px] font-medium text-zinc-400 mb-1">
@@ -145,13 +190,16 @@ export default function JobDetailsDrawer({
                 )}
               </div>
               {job ? <ResumeMatchScore score={job.resumeToJobScore} /> : null}
-              <button
-                type="button"
-                onClick={onClose}
-                className="p-1.5 rounded-xl text-zinc-400 hover:text-black hover:bg-zinc-100 transition-colors shrink-0"
-              >
-                ✕
-              </button>
+              {isPage ? null : (
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="p-1.5 rounded-xl text-zinc-400 hover:text-black hover:bg-zinc-100 transition-colors shrink-0"
+                >
+                  ✕
+                </button>
+              )}
+              </div>
             </div>
 
             {isLoading && (
@@ -312,7 +360,7 @@ export default function JobDetailsDrawer({
                     }}
                     rows={4}
                     placeholder="Add notes about this application..."
-                    className="w-full min-w-0 resize-y rounded-2xl border border-zinc-200/80 bg-zinc-50 p-4 text-xs leading-relaxed text-zinc-800 wrap-break-word focus:border-black focus:bg-white focus:outline-none"
+                    className="w-full min-w-0 resize-y rounded-2xl border-0 bg-zinc-50 p-4 text-xs leading-relaxed text-zinc-800 wrap-break-word focus:bg-white focus:outline-none focus:ring-0 hide-scrollbar"
                   />
                 </div>
 
@@ -346,7 +394,7 @@ export default function JobDetailsDrawer({
                     }}
                     rows={4}
                     placeholder="Original pasted job text..."
-                    className="w-full p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80 focus:bg-white focus:border-black focus:outline-none transition-all text-xs text-zinc-800 leading-relaxed resize-y wrap-break-word min-w-0"
+                    className="w-full p-4 rounded-2xl bg-zinc-50 border-0 focus:bg-white focus:outline-none focus:ring-0 transition-all text-xs text-zinc-800 leading-relaxed resize-y wrap-break-word min-w-0 hide-scrollbar"
                   />
                 </div>
 
@@ -379,11 +427,11 @@ export default function JobDetailsDrawer({
                     }}
                     rows={5}
                     placeholder="Paste or edit job description..."
-                    className="w-full p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80 focus:bg-white focus:border-black focus:outline-none transition-all text-xs text-zinc-800 leading-relaxed resize-y wrap-break-word min-w-0"
+                    className="w-full p-4 rounded-2xl bg-zinc-50 border-0 focus:bg-white focus:outline-none focus:ring-0 transition-all text-xs text-zinc-800 leading-relaxed resize-y wrap-break-word min-w-0 hide-scrollbar"
                   />
                 </div>
 
-                {/* Source URL (Editable & Clickable) */}
+                {/* Source URL (read-only) */}
                 <div className="pt-3 border-t border-zinc-100 flex flex-col gap-1.5 min-w-0">
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-zinc-500 font-medium">Source URL</span>
@@ -398,28 +446,59 @@ export default function JobDetailsDrawer({
                       </a>
                     ) : null}
                   </div>
-                  <InlineEditableCell
-                    value={job.sourceUrl}
-                    onSave={(val) => handleFieldUpdate(jobApi.updateSourceUrl, val, "sourceUrl")}
-                    placeholder="https://company.com/careers/job"
-                    fieldLabel="Source URL"
-                    textClassName="text-zinc-700 font-mono text-[11px] truncate block max-w-md"
-                  />
+                  <p className="text-zinc-700 font-mono text-[11px] truncate max-w-full" title={job.sourceUrl || undefined}>
+                    {job.sourceUrl || "—"}
+                  </p>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Footer */}
-          <div className="pt-4 border-t border-zinc-100 flex justify-end">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-5 py-2 text-xs font-semibold rounded-xl bg-black text-white hover:bg-zinc-800 transition-colors shadow-xs"
-            >
-              Done
-            </button>
-          </div>
+          {isPage ? (
+            <div className="shrink-0 border-t border-zinc-100 px-4 py-1.5 sm:px-6">
+              <button
+                type="button"
+                onClick={onClose}
+                className="inline-flex h-7 items-center gap-1 rounded-md px-2 text-[11px] font-semibold leading-none text-ink hover:bg-field whitespace-nowrap"
+              >
+                <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                </svg>
+                Back to dashboard
+              </button>
+            </div>
+          ) : (
+            <div className="shrink-0 pt-4 border-t border-zinc-100 flex justify-end">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-5 py-2 text-xs font-semibold rounded-xl bg-black text-white hover:bg-zinc-800 transition-colors shadow-xs"
+              >
+                Done
+              </button>
+            </div>
+          )}
+    </>
+  );
+
+  if (isPage) {
+    return (
+      <div className="job-details-page flex h-full min-h-0 w-full flex-col overflow-hidden bg-white">
+        {detailsBody}
+      </div>
+    );
+  }
+
+  return (
+    <div className="job-details-drawer fixed inset-0 z-50 h-dvh w-full overflow-hidden overscroll-none bg-black/40 backdrop-blur-xs animate-in fade-in duration-200">
+      <div className="absolute inset-0" onClick={onClose} />
+
+      <div className="absolute inset-y-0 right-0 max-w-full flex h-full pl-6 sm:pl-10">
+        <div
+          ref={panelRef}
+          className="flex h-full w-screen max-w-xl flex-col overflow-hidden border-l border-zinc-200 bg-white p-6 shadow-2xl animate-in slide-in-from-right duration-250 ease-out"
+        >
+          {detailsBody}
         </div>
       </div>
     </div>

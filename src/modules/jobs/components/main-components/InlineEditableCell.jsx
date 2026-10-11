@@ -105,7 +105,7 @@ export default function InlineEditableCell({
           onClick={handleStartEdit}
           disabled={isSaving}
           title={`Change ${fieldLabel}`}
-          className={`group inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded-md border border-transparent bg-field/70 text-ink hover:border-line hover:bg-field focus:outline-none transition-all max-w-full ${className}`}
+          className={`group inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded-md border-0 bg-field/70 text-ink hover:bg-field focus:outline-none focus:ring-0 transition-all max-w-full ${className}`}
         >
           <span className="truncate">{currentLabel}</span>
           {isSaving ? (
@@ -169,7 +169,7 @@ export default function InlineEditableCell({
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           aria-label={fieldLabel}
-          className="w-full px-2 py-1 text-xs rounded-md bg-white border border-line shadow-xs focus:outline-none focus:border-ink text-ink leading-snug"
+          className="w-full px-2 py-1 text-xs rounded-md bg-white border-0 shadow-none outline-none focus:outline-none focus:ring-0 text-ink leading-snug"
         />
       </div>
     );
@@ -181,18 +181,24 @@ export default function InlineEditableCell({
       onClick={handleStartEdit}
       title={value ? String(value) : `Edit ${fieldLabel}`}
       aria-label={value ? `${fieldLabel}: ${value}` : `Edit ${fieldLabel}`}
-      className={`group relative inline-flex items-start gap-1 rounded-md px-1 py-0.5 -mx-1 border border-transparent hover:border-line/80 hover:bg-field/80 focus:outline-none transition-colors duration-150 overflow-hidden w-full text-left ${className}`}
+      className={`group relative inline-flex items-center gap-1 rounded-md px-1 py-0.5 -mx-1 border-0 hover:bg-field/80 focus:outline-none focus:ring-0 transition-colors duration-150 overflow-hidden w-full text-left ${className}`}
     >
       <span
-        className={`text-xs border-b border-dotted border-transparent group-hover:border-muted/70 ${
+        className={`min-w-0 text-xs border-b border-dotted border-transparent group-hover:border-muted/70 ${
           lines > 1 ? "line-clamp-2 whitespace-normal" : "truncate"
         } ${!value ? "text-muted italic" : textClassName}`}
       >
         {value || placeholder}
       </span>
-      {isSaving ? <Spinner className="h-3 w-3 text-muted shrink-0" /> : null}
+      {isSaving ? <Spinner className="h-3 w-3 self-center text-muted shrink-0" /> : null}
       {justSaved ? (
-        <svg className="h-3 w-3 text-success shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+        <svg
+          className="h-3 w-3 self-center text-success shrink-0"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          aria-hidden="true"
+        >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
         </svg>
       ) : null}

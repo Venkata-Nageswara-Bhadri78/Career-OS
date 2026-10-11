@@ -9,6 +9,7 @@ export const APP_PATHS = Object.freeze({
   SETTINGS: "/settings",
   AI: "/ai",
   CUSTOM_PROMPTS: "/custom-prompts",
+  JOB_DRAFTS: "/job-drafts",
   jobChat: (jobId) => `/jobs/${encodeURIComponent(String(jobId))}/interact`,
 });
 

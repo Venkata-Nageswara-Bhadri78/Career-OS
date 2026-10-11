@@ -21,6 +21,8 @@ export default function SkillsCell({ skills = [], onSave, className = "", maxRow
     try {
       setIsSaving(true);
       await onSave(updated);
+    } catch {
+      /* The jobs page shows the update error. */
     } finally {
       setIsSaving(false);
     }
@@ -40,6 +42,8 @@ export default function SkillsCell({ skills = [], onSave, className = "", maxRow
     try {
       setIsSaving(true);
       await onSave(updated);
+    } catch {
+      /* The jobs page shows the update error. */
     } finally {
       setIsSaving(false);
     }

@@ -18,6 +18,8 @@ export const JOB_ENDPOINTS = Object.freeze({
   SKILLS: (id) => `${JOB_BASE_PATH}/${id}/skills`,
   DESCRIPTION: (id) => `${JOB_BASE_PATH}/${id}/description`,
   ORIGINAL_DESCRIPTION: (id) => `${JOB_BASE_PATH}/${id}/original-description`,
+  STATUS: (id) => `${JOB_BASE_PATH}/${id}/status`,
+  NOTES: (id) => `${JOB_BASE_PATH}/${id}/notes`,
 });
 
 export default JOB_ENDPOINTS;

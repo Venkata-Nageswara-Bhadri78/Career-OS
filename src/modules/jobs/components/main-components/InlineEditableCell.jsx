@@ -10,6 +10,7 @@ export default function InlineEditableCell({
   className = "",
   textClassName = "text-ink font-medium",
   fieldLabel = "Field",
+  lines = 1,
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [draftValue, setDraftValue] = useState(value ?? "");
@@ -180,12 +181,12 @@ export default function InlineEditableCell({
       onClick={handleStartEdit}
       title={value ? String(value) : `Edit ${fieldLabel}`}
       aria-label={value ? `${fieldLabel}: ${value}` : `Edit ${fieldLabel}`}
-      className={`group relative inline-flex items-center gap-1 rounded-md px-1 py-0.5 -mx-1 border border-transparent hover:border-line/80 hover:bg-field/80 focus:outline-none transition-colors duration-150 overflow-hidden w-full text-left ${className}`}
+      className={`group relative inline-flex items-start gap-1 rounded-md px-1 py-0.5 -mx-1 border border-transparent hover:border-line/80 hover:bg-field/80 focus:outline-none transition-colors duration-150 overflow-hidden w-full text-left ${className}`}
     >
       <span
-        className={`truncate text-xs border-b border-dotted border-transparent group-hover:border-muted/70 ${
-          !value ? "text-muted italic" : textClassName
-        }`}
+        className={`text-xs border-b border-dotted border-transparent group-hover:border-muted/70 ${
+          lines > 1 ? "line-clamp-2 whitespace-normal" : "truncate"
+        } ${!value ? "text-muted italic" : textClassName}`}
       >
         {value || placeholder}
       </span>

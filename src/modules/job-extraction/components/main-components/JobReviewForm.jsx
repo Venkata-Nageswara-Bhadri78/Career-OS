@@ -7,6 +7,7 @@ import {
 } from "../../config/jobExtractionConfig";
 import { validateReviewForm } from "../../mappers/jobExtractionMapper";
 import { joinJobSkills, splitJobSkills } from "../../../jobs/utils/formatters";
+import ResumeMatchScore from "../../../jobs/components/common/ResumeMatchScore";
 
 function FieldRow({ label, required = false, children, error, highlight = false }) {
   return (
@@ -119,6 +120,11 @@ export default function JobReviewForm({
             <span>{error}</span>
           </div>
         )}
+
+        <div className="flex items-center gap-4 border-b border-line py-2.5">
+          <span className="w-36 shrink-0 text-xs font-medium text-muted/70">Match score</span>
+          <ResumeMatchScore score={data.resumeToJobScore} compact />
+        </div>
 
         <FieldRow
           label="Job Title"

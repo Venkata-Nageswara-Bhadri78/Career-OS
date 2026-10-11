@@ -6,3 +6,14 @@
 .jobs-panel :is(input, select, textarea):focus {
   outline: none;
 }
+
+.job-grid-card .truncate {
+  overflow: visible;
+  text-overflow: unset;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.job-grid-card button.overflow-hidden {
+  overflow: visible;
+}

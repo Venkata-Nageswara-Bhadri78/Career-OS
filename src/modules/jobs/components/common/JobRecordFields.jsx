@@ -1,11 +1,11 @@
 import { useNavigate } from "react-router-dom";
 import InlineEditableCell from "../main-components/InlineEditableCell";
 import JobActionsMenu from "../sub-components/JobActionsMenu";
-import { JobSkillsField } from "./JobSkillsField";
 import {
   JOBS_EMPLOYMENT_TYPE_PRESETS,
   JOBS_WORK_MODE_PRESETS,
 } from "../../config/jobsConfig";
+import ResumeMatchScore from "./ResumeMatchScore";
 
 export function InteractButton({ jobId }) {
   const navigate = useNavigate();
@@ -54,6 +54,7 @@ export function JobRecordActions({
   job,
   onViewClick,
   onDeleteClick,
+  onNotesSaved,
   compact = false,
   showInteract = true,
   showView = true,
@@ -65,44 +66,47 @@ export function JobRecordActions({
     >
       {showInteract ? <InteractButton jobId={job.id} /> : null}
       {showView ? <ViewButton onClick={() => onViewClick(job.id)} /> : null}
-      <JobActionsMenu job={job} onDeleteClick={onDeleteClick} />
+      <JobActionsMenu job={job} onDeleteClick={onDeleteClick} onNotesSaved={onNotesSaved} />
     </div>
   );
 }
 
 export { JobSkillsField } from "./JobSkillsField";
 
-export function JobTitleField({ job, onSave }) {
+export function JobTitleField({ job, onSave, lines = 1 }) {
   return (
     <InlineEditableCell
       value={job.title}
       onSave={(val) => onSave(job, val)}
       placeholder="Untitled role"
       fieldLabel="Job title"
+      lines={lines}
       textClassName="font-semibold text-ink leading-snug"
     />
   );
 }
 
-export function JobCompanyField({ job, onSave }) {
+export function JobCompanyField({ job, onSave, lines = 1 }) {
   return (
     <InlineEditableCell
       value={job.company}
       onSave={(val) => onSave(job, val)}
       placeholder="Company"
       fieldLabel="Company"
+      lines={lines}
       textClassName="text-[11px] text-muted leading-snug"
     />
   );
 }
 
-export function JobLocationField({ job, onSave }) {
+export function JobLocationField({ job, onSave, lines = 1 }) {
   return (
     <InlineEditableCell
       value={job.location}
       onSave={(val) => onSave(job, val)}
       placeholder="Set location"
       fieldLabel="Location"
+      lines={lines}
       textClassName="text-xs text-ink font-medium leading-snug"
     />
   );
@@ -134,25 +138,31 @@ export function JobTypeField({ job, onSave }) {
   );
 }
 
-export function JobSalaryField({ job, onSave }) {
+export function JobSalaryField({ job, onSave, lines = 1 }) {
   return (
     <InlineEditableCell
       value={job.salary}
       onSave={(val) => onSave(job, val)}
       placeholder="Salary"
       fieldLabel="Salary"
+      lines={lines}
       textClassName="text-xs font-medium text-ink leading-snug"
     />
   );
 }
 
-export function JobExperienceField({ job, onSave }) {
+export function JobScoreValue({ job }) {
+  return <ResumeMatchScore score={job?.resumeToJobScore} compact />;
+}
+
+export function JobExperienceField({ job, onSave, lines = 1 }) {
   return (
     <InlineEditableCell
       value={job.experience}
       onSave={(val) => onSave(job, val)}
       placeholder="Experience"
       fieldLabel="Experience"
+      lines={lines}
       textClassName="text-[11px] text-muted leading-snug"
     />
   );

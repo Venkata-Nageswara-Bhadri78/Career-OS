@@ -26,6 +26,14 @@ export function mergeJobSummary(existing, updated) {
     sourcePlatform: updated.sourcePlatform ?? existing?.sourcePlatform,
     skills: updated.skills != null ? asJobSkillsString(updated.skills) : asJobSkillsString(existing?.skills, ""),
     createdAt: updated.createdAt ?? existing?.createdAt,
+    jobStatus: updated.jobStatus ?? existing?.jobStatus,
+    customStatus: Object.prototype.hasOwnProperty.call(updated, "customStatus")
+      ? updated.customStatus
+      : existing?.customStatus,
+    resumeToJobScore: updated.resumeToJobScore ?? existing?.resumeToJobScore,
+    notes: Object.prototype.hasOwnProperty.call(updated, "notes") ? updated.notes : existing?.notes,
+    resume: Object.prototype.hasOwnProperty.call(updated, "resume") ? updated.resume : existing?.resume,
+    updatedAt: updated.updatedAt ?? existing?.updatedAt,
   };
 }
 

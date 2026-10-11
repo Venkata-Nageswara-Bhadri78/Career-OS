@@ -51,6 +51,20 @@ export function CustomPromptsIcon(props) {
   );
 }
 
+export function JobDraftsIcon(props) {
+  return (
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true" {...props}>
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={1.8}
+        d="M7 4h7l4 4v12a1 1 0 01-1 1H7a1 1 0 01-1-1V5a1 1 0 011-1z"
+      />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M14 4v4h4M8 13h8M8 17h5" />
+    </svg>
+  );
+}
+
 export function SettingsIcon(props) {
   return (
     <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true" {...props}>

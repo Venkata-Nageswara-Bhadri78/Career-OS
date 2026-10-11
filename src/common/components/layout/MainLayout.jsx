@@ -27,7 +27,7 @@ export default function MainLayout() {
 
   return (
     <div className="career-shell flex flex-col h-screen bg-field font-sans text-ink overflow-hidden p-1 gap-1">
-      <div className="relative z-40 shrink-0 w-full rounded-xl border border-line bg-white/90 backdrop-blur-xl shadow-sm overflow-visible">
+      <div className="relative z-40 shrink-0 w-full rounded-lg border border-line bg-white/90 backdrop-blur-xl shadow-sm overflow-visible">
         <Navbar
           onToggleSidebar={() => setIsSidebarOpen((open) => !open)}
           isSidebarOpen={isSidebarOpen}
@@ -45,7 +45,7 @@ export default function MainLayout() {
           />
         ) : null}
         <Sidebar open={isSidebarOpen} onClose={closeSidebar} />
-        <main className="flex-1 min-w-0 overflow-auto bg-white rounded-xl border border-line shadow-sm relative flex flex-col">
+        <main className="flex-1 min-w-0 overflow-auto bg-white rounded-lg border border-line shadow-sm relative flex flex-col">
           <Outlet />
         </main>
       </div>

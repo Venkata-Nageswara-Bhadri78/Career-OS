@@ -1,4 +1,4 @@
-import { APP_PATHS, isJobChatPath } from "./appPaths";
+import { APP_PATHS, isJobChatPath, isJobDetailsPath } from "./appPaths";
 
 export const SHELL_BRAND = Object.freeze({
   letter: "C",
@@ -19,6 +19,8 @@ export const MOBILE_MEDIA_QUERY = "(max-width: 767px)";
 export function isNavItemActive(item, pathname) {
   if (!item?.path) return false;
   if (item.id === "ai") return pathname === APP_PATHS.AI || pathname.startsWith(`${APP_PATHS.AI}/`) || isJobChatPath(pathname);
-  if (item.id === "dashboard") return pathname === APP_PATHS.DASHBOARD || pathname.startsWith(`${APP_PATHS.DASHBOARD}/`);
+  if (item.id === "dashboard") {
+    return pathname === APP_PATHS.DASHBOARD || pathname.startsWith(`${APP_PATHS.DASHBOARD}/`) || isJobDetailsPath(pathname);
+  }
   return pathname === item.path || pathname.startsWith(`${item.path}/`);
 }

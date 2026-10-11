@@ -45,7 +45,7 @@ export default function Sidebar({ open, onClose }) {
   return (
     <aside
       id="workspace-sidebar"
-      className={`shell-sidebar flex flex-col bg-white border border-line rounded-xl shadow-sm z-30 h-full overflow-hidden shrink-0 ${
+      className={`shell-sidebar flex flex-col bg-white border border-line rounded-none rounded-r-lg shadow-sm z-30 h-full overflow-hidden shrink-0 ${
         open ? "is-open" : "is-closed"
       }`}
       aria-label="Workspace navigation"

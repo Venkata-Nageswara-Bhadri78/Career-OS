@@ -140,7 +140,7 @@ export default function JobStatusField({ job, onSave }) {
   };
 
   return (
-    <div className="relative max-w-full" ref={rootRef} onClick={(event) => event.stopPropagation()}>
+    <div className="relative w-[7rem] max-w-full" ref={rootRef} onClick={(event) => event.stopPropagation()}>
       <button
         type="button"
         aria-haspopup="listbox"
@@ -154,7 +154,7 @@ export default function JobStatusField({ job, onSave }) {
           setIsCustomizing(false);
           setIsOpen((open) => !open);
         }}
-        className={`group inline-flex max-w-full items-center gap-1 rounded-md border px-2 py-0.5 text-[11px] font-semibold disabled:opacity-60 ${
+        className={`group flex h-6 w-full min-w-0 items-center gap-1 rounded-md border px-1.5 text-[11px] font-semibold disabled:opacity-60 focus:outline-none focus:ring-0 ${
           currentColor ? "" : "border-line bg-field/70 text-ink"
         }`}
         style={
@@ -172,7 +172,7 @@ export default function JobStatusField({ job, onSave }) {
           style={{ backgroundColor: currentColor || "#6b7280" }}
           aria-hidden="true"
         />
-        <span className="truncate">{currentLabel}</span>
+        <span className="min-w-0 flex-1 truncate text-left">{currentLabel}</span>
         {isSaving ? (
           <Spinner className="h-2.5 w-2.5 shrink-0 text-ink" />
         ) : (
@@ -212,7 +212,7 @@ export default function JobStatusField({ job, onSave }) {
                 role="option"
                 aria-selected={selected}
                 onClick={() => chooseStatus(option.value)}
-                className={`flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-xs font-medium ${
+                className={`flex h-8 w-full items-center justify-between rounded-lg px-2.5 text-left text-xs font-medium ${
                   selected ? "bg-field font-semibold text-ink" : "text-ink/80 hover:bg-field/80 hover:text-ink"
                 }`}
               >

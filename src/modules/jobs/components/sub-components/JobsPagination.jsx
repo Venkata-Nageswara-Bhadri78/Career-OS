@@ -4,18 +4,19 @@ export default function JobsPagination({
   totalElements,
   pageSize,
   onPageChange,
-  itemLabel = "saved jobs",
+  itemLabel = "jobs",
 }) {
   const from = totalElements === 0 ? 0 : page * pageSize + 1;
   const to = Math.min(totalElements, (page + 1) * pageSize);
+  const pages = Math.max(1, totalPages);
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 px-2 py-1.5 border-t border-line bg-field/40 text-[11px] text-muted shrink-0">
-      <span>
-        Showing <strong className="text-ink">{from}</strong> to <strong className="text-ink">{to}</strong> of{" "}
+    <div className="mt-1 flex flex-nowrap items-center justify-between gap-1.5 overflow-x-auto px-2 py-2.5 md:mt-0 md:py-1 border-t border-line bg-field/40 text-[11px] text-muted shrink-0 hide-scrollbar">
+      <span className="shrink-0 whitespace-nowrap">
+        <strong className="text-ink">{from}</strong> to <strong className="text-ink">{to}</strong> of{" "}
         <strong className="text-ink">{totalElements}</strong> {itemLabel}
       </span>
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1 shrink-0 whitespace-nowrap">
         <button
           type="button"
           onClick={() => onPageChange(page - 1)}
@@ -25,7 +26,7 @@ export default function JobsPagination({
           Previous
         </button>
         <span className="px-1.5 font-medium text-ink text-[11px]">
-          Page {page + 1} of {Math.max(1, totalPages)}
+          {page + 1} of {pages} pages
         </span>
         <button
           type="button"

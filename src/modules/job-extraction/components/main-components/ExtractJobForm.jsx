@@ -1,5 +1,106 @@
+import { useEffect, useId, useRef, useState } from "react";
 import Spinner from "../../../../common/components/loaders/Spinner";
 import { JOB_EXTRACTION_LIMITS } from "../../config/jobExtractionConfig";
+
+function resumeLabel(resume) {
+  if (!resume) return "Select a resume";
+  return `${resume.originalFilename || "Resume"}${resume.highPriority ? " (Priority)" : ""}`;
+}
+
+function ResumeSelect({ resumeId, resumes, knownResume, disabled, onResumeChange }) {
+  const menuId = useId();
+  const rootRef = useRef(null);
+  const [open, setOpen] = useState(false);
+  const selected = resumes.find((resume) => String(resume.id) === String(resumeId));
+  const label = selected
+    ? resumeLabel(selected)
+    : resumes.length === 0
+      ? "Priority resume"
+      : !knownResume && resumeId
+        ? "Selected resume"
+        : "Select a resume";
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const onPointerDown = (event) => {
+      if (rootRef.current?.contains(event.target)) return;
+      setOpen(false);
+    };
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
+
+  return (
+    <div className="relative" ref={rootRef}>
+      <button
+        type="button"
+        id="job-resume"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls={menuId}
+        disabled={disabled}
+        onClick={() => setOpen((value) => !value)}
+        className="flex h-9 w-full min-w-0 items-center justify-between gap-2 rounded-lg border border-line bg-field px-3 text-left text-xs text-ink transition-colors hover:bg-bg focus:border-ink focus:bg-bg focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        <span className="min-w-0 truncate">{label}</span>
+        <svg
+          className={`h-3.5 w-3.5 shrink-0 text-muted transition-transform ${open ? "rotate-180 text-ink" : ""}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          aria-hidden="true"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {open ? (
+        <div
+          id={menuId}
+          role="listbox"
+          aria-label="Resume"
+          className="absolute z-30 mt-1 max-h-52 w-full overflow-y-auto rounded-xl border border-line bg-white p-1 shadow-xl"
+        >
+          {resumes.length === 0 ? (
+            <div className="px-2.5 py-2 text-xs text-muted">No resumes available</div>
+          ) : (
+            resumes.map((resume) => {
+              const isSelected = String(resume.id) === String(resumeId);
+              return (
+                <button
+                  key={resume.id}
+                  type="button"
+                  role="option"
+                  aria-selected={isSelected}
+                  onClick={() => {
+                    onResumeChange?.(resume.id);
+                    setOpen(false);
+                  }}
+                  className={`flex w-full items-center justify-between gap-2 rounded-lg px-2.5 py-2 text-left text-xs ${
+                    isSelected ? "bg-field font-semibold text-ink" : "font-medium text-ink/80 hover:bg-field/80 hover:text-ink"
+                  }`}
+                >
+                  <span className="min-w-0 truncate">{resume.originalFilename || "Resume"}</span>
+                  {resume.highPriority ? (
+                    <span className="shrink-0 rounded-md bg-accent/15 px-1.5 py-0.5 text-[10px] font-semibold text-ink">
+                      Priority
+                    </span>
+                  ) : null}
+                </button>
+              );
+            })
+          )}
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 function InlineAlert({ children, tone = "danger" }) {
   const tones = {
@@ -113,22 +214,13 @@ export default function ExtractJobForm({
             <label htmlFor="job-resume" className="block text-xs font-medium text-ink">
               Resume
             </label>
-            <select
-              id="job-resume"
-              value={resumeId || ""}
-              onChange={(event) => onResumeChange?.(event.target.value ? Number(event.target.value) : "")}
+            <ResumeSelect
+              resumeId={resumeId}
+              resumes={resumes}
+              knownResume={knownResume}
               disabled={isLoading || isLocked || resumes.length === 0}
-              className="w-full rounded-lg border border-line bg-field px-3 py-2 text-xs text-ink focus:border-ink focus:bg-bg focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {resumes.length === 0 ? <option value="">Priority resume</option> : null}
-              {!knownResume && resumeId ? <option value={resumeId}>Selected resume</option> : null}
-              {resumes.map((resume) => (
-                <option key={resume.id} value={resume.id}>
-                  {resume.originalFilename}
-                  {resume.highPriority ? " (Priority)" : ""}
-                </option>
-              ))}
-            </select>
+              onResumeChange={onResumeChange}
+            />
           </div>
 
           <div className="shrink-0 space-y-1">

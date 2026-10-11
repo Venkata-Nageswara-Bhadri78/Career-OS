@@ -4,11 +4,12 @@ import {
   JobLocationField,
   JobRecordActions,
   JobSalaryField,
+  JobScoreValue,
   JobSkillsField,
   JobTitleField,
-  JobTypeField,
-  JobWorkModeField,
 } from "../common/JobRecordFields";
+import JobStatusField from "../common/JobStatusField";
+import jobApi from "../../api/jobApi";
 import { createJobFieldHandlers } from "../../utils/jobFieldHandlers";
 
 export default function JobsListView({
@@ -42,7 +43,7 @@ export default function JobsListView({
   }
 
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto">
+    <div className="hide-scrollbar flex-1 min-h-0 overflow-y-auto">
       {updateError ? (
         <p className="mx-2 mb-1 px-2 py-1.5 text-[11px] text-danger bg-red-50 border border-red-200 rounded-lg" role="alert">
           {updateError}
@@ -51,17 +52,19 @@ export default function JobsListView({
       <table className="w-full table-fixed text-left border-collapse">
         <thead className="sticky top-0 z-10">
           <tr className="border-b border-line bg-field/95 backdrop-blur-sm">
-            <th className="py-2 px-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted w-[19%]">
+            <th className="py-2 px-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted w-[18%]">
               Job title
             </th>
             <th className="py-2 px-1 text-[10px] font-semibold uppercase tracking-wide text-muted w-[10%]">Company</th>
             <th className="py-2 px-1 text-[10px] font-semibold uppercase tracking-wide text-muted w-[10%]">Location</th>
-            <th className="py-2 px-1 text-[10px] font-semibold uppercase tracking-wide text-muted w-[8%]">Work mode</th>
-            <th className="py-2 px-1 text-[10px] font-semibold uppercase tracking-wide text-muted w-[8%]">Type</th>
             <th className="py-2 px-1 text-[10px] font-semibold uppercase tracking-wide text-muted w-[8%]">Salary</th>
-            <th className="py-2 px-1 text-[10px] font-semibold uppercase tracking-wide text-muted w-[7%]">Experience</th>
-            <th className="py-2 px-1 text-[10px] font-semibold uppercase tracking-wide text-muted w-[17%]">Skills</th>
-            <th className="py-2 px-1 text-[10px] font-semibold uppercase tracking-wide text-muted w-[13%] text-right">
+            <th className="py-2 px-1 text-[10px] font-semibold uppercase tracking-wide text-muted w-[8%]">Experience</th>
+            <th className="py-2 px-1 text-[10px] font-semibold uppercase tracking-wide text-muted w-[14%]">Skills</th>
+            <th className="py-2 px-1 text-[10px] font-semibold uppercase tracking-wide text-muted w-[12%]">Job status</th>
+            <th className="py-2 px-1 text-center text-[10px] font-semibold uppercase tracking-wide text-muted w-[6%]" title="Resume to job score">
+              Score
+            </th>
+            <th className="py-2 px-1 text-[10px] font-semibold uppercase tracking-wide text-muted w-[14%] text-right">
               Actions
             </th>
           </tr>
@@ -83,12 +86,6 @@ export default function JobsListView({
                 <JobLocationField job={job} onSave={fields.location} />
               </td>
               <td className="py-2 px-1 align-top max-w-0">
-                <JobWorkModeField job={job} onSave={fields.workMode} />
-              </td>
-              <td className="py-2 px-1 align-top max-w-0">
-                <JobTypeField job={job} onSave={fields.employmentType} />
-              </td>
-              <td className="py-2 px-1 align-top max-w-0">
                 <JobSalaryField job={job} onSave={fields.salary} />
               </td>
               <td className="py-2 px-1 align-top max-w-0">
@@ -97,8 +94,30 @@ export default function JobsListView({
               <td className="py-2 px-1 align-top max-w-0" onClick={(e) => e.stopPropagation()}>
                 <JobSkillsField job={job} onUpdate={onUpdate} maxRows={2} />
               </td>
+              <td className="py-2 px-1 align-top max-w-0" onClick={(e) => e.stopPropagation()}>
+                <JobStatusField job={job} onSave={fields.jobStatus} />
+              </td>
+              <td className="py-2 px-1 text-center align-middle">
+                <JobScoreValue job={job} />
+              </td>
               <td className="py-2 px-1 align-middle">
-                <JobRecordActions job={job} onViewClick={onViewClick} onDeleteClick={onDeleteClick} />
+                <JobRecordActions
+                  job={job}
+                  onViewClick={onViewClick}
+                  onDeleteClick={onDeleteClick}
+                  onNotesSaved={(savedJob) => {
+                    const savedNotes = typeof savedJob?.notes === "string" ? savedJob.notes : "";
+                    return onUpdate(
+                      job,
+                      "notes",
+                      (id, value) =>
+                        value === savedNotes ? Promise.resolve(savedJob) : jobApi.updateNotes(id, value),
+                      savedNotes,
+                      "Notes",
+                      typeof job.notes === "string" ? job.notes : ""
+                    );
+                  }}
+                />
               </td>
             </tr>
           ))}

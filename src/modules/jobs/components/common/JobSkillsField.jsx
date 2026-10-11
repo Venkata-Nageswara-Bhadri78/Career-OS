@@ -2,7 +2,7 @@ import SkillsCell from "../main-components/SkillsCell";
 import jobApi from "../../api/jobApi";
 import { joinJobSkills, splitJobSkills } from "../../utils/formatters";
 
-export function JobSkillsField({ job, onUpdate, editable = true, maxRows = 2 }) {
+export function JobSkillsField({ job, onUpdate, editable = true, maxRows = 2, relaxed = false }) {
   const skillList = splitJobSkills(job.skills);
   const skillsText = skillList.join(", ");
 
@@ -19,6 +19,7 @@ export function JobSkillsField({ job, onUpdate, editable = true, maxRows = 2 }) 
       key={`${job.id}-${skillList.length}-${skillsText}`}
       skills={skillList}
       maxRows={maxRows}
+      relaxed={relaxed}
       onSave={(val) => onUpdate(job, "skills", jobApi.updateSkills, joinJobSkills(val), "Skills")}
     />
   );

@@ -2,6 +2,7 @@ const FEATURES = [
   {
     title: "Zero manual typing",
     desc: "Paste the link and the page text — every field is filled in for you.",
+    automated: "Paste the link — the page is read for you.",
   },
   {
     title: "Never invents data",
@@ -13,7 +14,8 @@ const FEATURES = [
   },
 ];
 
-export default function JobExtractionEmptyState() {
+export default function JobExtractionEmptyState({ mode = "manual", isAuto = false }) {
+  const automated = mode === "automated";
   return (
     <div className="h-full flex flex-col items-center justify-center text-center px-8">
       <div className="relative mb-6">
@@ -34,9 +36,24 @@ export default function JobExtractionEmptyState() {
 
       <h3 className="text-xl font-bold text-ink tracking-tight">AI-Powered Job Extraction</h3>
       <p className="text-xs text-muted mt-2 max-w-sm leading-relaxed">
-        Fill in the job URL and paste the posting on the left, then hit{" "}
-        <span className="font-semibold text-ink">Extract Job Info</span> — your review form will
-        appear here.
+        {isAuto ? (
+          <>
+            Save automatically is on. Extraction creates the job, or stores a draft when it cannot be
+            saved. There is no review step for this request.
+          </>
+        ) : automated ? (
+          <>
+            Enter only the job URL on the left, then hit{" "}
+            <span className="font-semibold text-ink">Extract Job Info</span> — your review form will
+            appear here.
+          </>
+        ) : (
+          <>
+            Fill in the job URL and paste the posting on the left, then hit{" "}
+            <span className="font-semibold text-ink">Extract Job Info</span> — your review form will
+            appear here.
+          </>
+        )}
       </p>
 
       <div className="mt-8 w-full max-w-sm space-y-3">
@@ -50,7 +67,9 @@ export default function JobExtractionEmptyState() {
             </span>
             <div>
               <p className="text-xs font-semibold text-ink">{f.title}</p>
-              <p className="text-[11px] text-muted mt-0.5 leading-relaxed">{f.desc}</p>
+              <p className="text-[11px] text-muted mt-0.5 leading-relaxed">
+                {automated && f.automated ? f.automated : f.desc}
+              </p>
             </div>
           </div>
         ))}

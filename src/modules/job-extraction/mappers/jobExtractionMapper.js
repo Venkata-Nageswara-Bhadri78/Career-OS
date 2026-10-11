@@ -1,4 +1,5 @@
 import { JOB_EXTRACTION_LIMITS } from "../config/jobExtractionConfig";
+import { parseResumeToJobScore } from "../../jobs/config/jobStatus";
 import { joinJobSkills } from "../../jobs/utils/formatters";
 
 const FIELD_LIMITS = Object.freeze({
@@ -20,6 +21,12 @@ function asString(value) {
   return typeof value === "string" ? value : value == null ? "" : String(value);
 }
 
+function asPositiveInt(value) {
+  const id = typeof value === "number" ? value : Number(value);
+  if (!Number.isInteger(id) || id <= 0) return null;
+  return id;
+}
+
 function parseFieldErrors(message) {
   if (!message || typeof message !== "string") return {};
   const errors = {};
@@ -32,6 +39,7 @@ function parseFieldErrors(message) {
     if (!field || !text) return;
     if (field === "sourceUrl") errors.url = text;
     else if (field === "rawJobText") errors.text = text;
+    else if (field === "resume") errors.resume = text;
     else errors.general = errors.general ? `${errors.general} ${text}` : text;
   });
   return errors;
@@ -58,17 +66,36 @@ export function mapExtractionResult(data) {
     sourcePlatform: asString(data.sourcePlatform),
     skills,
     requiresManualReview: Boolean(data.requiresManualReview),
+    resume: asPositiveInt(data.resume),
+    resumeToJobScore: parseResumeToJobScore(data.resumeToJobScore),
+  };
+}
+
+export function mapPersistedExtraction(result) {
+  const data = result?.data;
+  const message = typeof result?.message === "string" ? result.message.trim() : "";
+  if (!data || typeof data !== "object") {
+    return { message, persistedAs: null, job: null, draft: null, failureReason: null };
+  }
+  const persistedAs = data.persistedAs === "JOB" || data.persistedAs === "DRAFT" ? data.persistedAs : null;
+  const jobId = asPositiveInt(data.job?.id);
+  const draftId = asPositiveInt(data.draft?.id);
+  return {
+    message,
+    persistedAs,
+    job: persistedAs === "JOB" && jobId ? { ...data.job, id: jobId } : null,
+    draft: persistedAs === "DRAFT" && draftId ? { id: draftId, failureReason: asString(data.draft?.failureReason).trim() } : null,
+    failureReason: asString(data.failureReason).trim(),
   };
 }
 
 export function toJobRequest(preview) {
   if (!preview) return null;
-  const { requiresManualReview: _flag, ...rest } = preview;
   const payload = {
-    sourceUrl: asString(rest.sourceUrl).trim(),
-    originalDescription: asString(rest.originalDescription).trim(),
-    title: asString(rest.title).trim(),
-    company: asString(rest.company).trim(),
+    sourceUrl: asString(preview.sourceUrl).trim(),
+    originalDescription: asString(preview.originalDescription).trim(),
+    title: asString(preview.title).trim(),
+    company: asString(preview.company).trim(),
   };
 
   const optionalKeys = [
@@ -85,20 +112,26 @@ export function toJobRequest(preview) {
   ];
 
   optionalKeys.forEach((key) => {
-    const value = asString(rest[key]).trim();
+    const value = asString(preview[key]).trim();
     if (value) payload[key] = value;
   });
 
-  const skills = asString(rest.skills);
+  const skills = asString(preview.skills);
   if (skills.trim()) payload.skills = skills;
+
+  const resumeId = asPositiveInt(preview.resume);
+  if (resumeId) payload.resume = resumeId;
+  const score = parseResumeToJobScore(preview.resumeToJobScore);
+  if (score != null) payload.resumeToJobScore = score;
 
   return payload;
 }
 
-export function validateExtractForm({ sourceUrl, rawJobText }) {
-  const errors = { url: null, text: null, general: null };
+export function validateExtractForm({ sourceUrl, rawJobText, mode = "manual" }) {
+  const errors = { url: null, text: null, general: null, resume: null };
   const url = asString(sourceUrl).trim();
   const text = asString(rawJobText).trim();
+  const automated = mode === "automated";
 
   if (!url) {
     errors.url = "Job URL is required.";
@@ -108,9 +141,9 @@ export function validateExtractForm({ sourceUrl, rawJobText }) {
     errors.url = "Job URL must start with http:// or https://.";
   }
 
-  if (!text) {
+  if (!automated && !text) {
     errors.text = "Pasted job description is required.";
-  } else if (text.length > JOB_EXTRACTION_LIMITS.RAW_JOB_TEXT_MAX) {
+  } else if (!automated && text.length > JOB_EXTRACTION_LIMITS.RAW_JOB_TEXT_MAX) {
     errors.text = `Description must be at most ${JOB_EXTRACTION_LIMITS.RAW_JOB_TEXT_MAX.toLocaleString()} characters.`;
   }
 
@@ -163,6 +196,9 @@ export function mapJobExtractionError(error) {
     result.message = rawMessage || "Please verify your email before using this feature.";
   } else if (status === 401) {
     result.message = rawMessage || "Your session has ended. Please sign in again.";
+  } else if (status === 404 && /resume/i.test(rawMessage)) {
+    result.fieldErrors = { ...fieldErrors, resume: rawMessage || "Resume not found." };
+    result.message = null;
   } else if (status === 400 && Object.keys(fieldErrors).length > 0) {
     result.message = null;
   }

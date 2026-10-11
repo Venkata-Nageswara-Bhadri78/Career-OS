@@ -5,12 +5,13 @@ import { SHELL_NAV_ITEMS, isNavItemActive } from "../../config/shellConfig";
 import { useShellSession } from "../../session/useShellSession";
 import ChatHistoryPanel from "./ChatHistoryPanel";
 import { useChatHistorySlot } from "./chatHistoryContext";
-import { AIIcon, CloseIcon, CustomPromptsIcon, DashboardIcon, LogoutIcon, ProfileIcon, SettingsIcon } from "./ShellIcons";
+import { AIIcon, CloseIcon, CustomPromptsIcon, DashboardIcon, JobDraftsIcon, LogoutIcon, ProfileIcon, SettingsIcon } from "./ShellIcons";
 
 const NAV_ICONS = {
   dashboard: DashboardIcon,
   ai: AIIcon,
   "custom-prompts": CustomPromptsIcon,
+  "job-drafts": JobDraftsIcon,
   profile: ProfileIcon,
 };
 

@@ -1,4 +1,11 @@
-export default function JobsPagination({ page, totalPages, totalElements, pageSize, onPageChange }) {
+export default function JobsPagination({
+  page,
+  totalPages,
+  totalElements,
+  pageSize,
+  onPageChange,
+  itemLabel = "saved jobs",
+}) {
   const from = totalElements === 0 ? 0 : page * pageSize + 1;
   const to = Math.min(totalElements, (page + 1) * pageSize);
 
@@ -6,7 +13,7 @@ export default function JobsPagination({ page, totalPages, totalElements, pageSi
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 px-2 py-1.5 border-t border-line bg-field/40 text-[11px] text-muted shrink-0">
       <span>
         Showing <strong className="text-ink">{from}</strong> to <strong className="text-ink">{to}</strong> of{" "}
-        <strong className="text-ink">{totalElements}</strong> saved jobs
+        <strong className="text-ink">{totalElements}</strong> {itemLabel}
       </span>
       <div className="flex items-center gap-1">
         <button

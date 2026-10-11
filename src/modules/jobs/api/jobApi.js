@@ -1,6 +1,8 @@
+import { ApiError } from "../../../common/api/apiError";
 import JOB_ENDPOINTS from "./jobEndpoints";
 import { get, post, put, patch, del } from "../../../common/api/httpClient";
 import { unwrapApiResponse } from "../../../common/api/unwrapApiResponse";
+import { parseJobStatus } from "../config/jobStatus";
 import { joinJobSkills } from "../utils/formatters";
 
 function withSkillsString(jobData) {
@@ -58,6 +60,34 @@ export const updateDescription = async (id, description) => unwrapJob(await patc
 export const updateOriginalDescription = async (id, originalDescription) =>
   unwrapJob(await patch(JOB_ENDPOINTS.ORIGINAL_DESCRIPTION(id), { originalDescription }));
 
+export const updateJobStatus = async (id, value) => {
+  const jobId = Number(id);
+  if (!Number.isInteger(jobId) || jobId <= 0) {
+    throw new ApiError({ message: "Job not found.", status: 404, data: null });
+  }
+  const source = value && typeof value === "object" ? value : { jobStatus: value };
+  const jobStatus = parseJobStatus(source.jobStatus);
+  if (!jobStatus) {
+    throw new ApiError({ message: "Job status is required.", status: 400, data: null });
+  }
+  const body = { jobStatus };
+  if (jobStatus === "CUSTOM") {
+    const customStatus = typeof source.customStatus === "string" ? source.customStatus.trim() : "";
+    if (!customStatus) {
+      throw new ApiError({
+        message: "Custom status text is required when jobStatus is CUSTOM.",
+        status: 400,
+        data: null,
+      });
+    }
+    body.customStatus = customStatus;
+  }
+  return unwrapJob(await patch(JOB_ENDPOINTS.STATUS(jobId), body));
+};
+
+export const updateNotes = async (id, notes) =>
+  unwrapJob(await patch(JOB_ENDPOINTS.NOTES(id), { notes: typeof notes === "string" ? notes : "" }));
+
 const jobApi = {
   createJob,
   getJobs,
@@ -80,6 +110,8 @@ const jobApi = {
   updateSkills,
   updateDescription,
   updateOriginalDescription,
+  updateJobStatus,
+  updateNotes,
 };
 
 export default jobApi;

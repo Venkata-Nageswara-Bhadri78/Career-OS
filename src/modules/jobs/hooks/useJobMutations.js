@@ -12,8 +12,7 @@ export default function useJobFieldUpdate(onJobUpdated) {
   }, []);
 
   const handleUpdate = useCallback(
-    async (job, fieldKey, updateFn, newValue, label) => {
-      const previousValue = job?.[fieldKey] ?? null;
+    async (job, fieldKey, updateFn, newValue, label, previousValue = job?.[fieldKey] ?? null) => {
       const updatedJob = await updateFn(job.id, newValue);
       const merged = mergeJobSummary(job, updatedJob);
       if (onJobUpdated) onJobUpdated(merged);

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, startTransition } from "react";
+import { useCallback, useEffect, useRef, useState, startTransition } from "react";
 import "../styles/jobs.css";
 import JobsToolbar from "../components/sub-components/JobsToolbar";
 import JobsBoard from "../components/main-components/JobsBoard";
@@ -10,7 +10,7 @@ import useJobsList from "../hooks/useJobsList";
 import useJobsViewMode, { useDismissibleMessage } from "../hooks/useJobsViewMode";
 import useJobFieldUpdate, { useJobCreate, useJobDelete } from "../hooks/useJobMutations";
 
-export default function JobDashboardPage({ onAddJob, registerCreateJob }) {
+export default function JobDashboardPage({ onAddJob, registerCreateJob, openJob = null, onOpenJobHandled }) {
   const {
     jobs,
     page,
@@ -45,6 +45,20 @@ export default function JobDashboardPage({ onAddJob, registerCreateJob }) {
   const [jobToDelete, setJobToDelete] = useState(null);
   const [selectedJobId, setSelectedJobId] = useState(null);
   const [updateError, setUpdateError] = useState(null);
+  const handledOpenJobId = useRef(null);
+
+  useEffect(() => {
+    if (!openJob?.id) {
+      handledOpenJobId.current = null;
+      return;
+    }
+    if (handledOpenJobId.current === openJob.id) return;
+    handledOpenJobId.current = openJob.id;
+    prependJob(openJob);
+    setSelectedJobId(openJob.id);
+    showMessage("Job created successfully.");
+    onOpenJobHandled?.();
+  }, [onOpenJobHandled, openJob, prependJob, showMessage]);
 
   const handleJobUpdated = useCallback(
     (updatedJob) => {
@@ -62,6 +76,7 @@ export default function JobDashboardPage({ onAddJob, registerCreateJob }) {
         await handleUpdate(job, fieldKey, updateFn, newValue, label);
       } catch (err) {
         setUpdateError(err?.message || `Failed to update ${label}.`);
+        throw err;
       }
     },
     [handleUpdate]

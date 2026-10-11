@@ -11,6 +11,9 @@
  * @property {string} [sourcePlatform]
  * @property {string} skills Comma-separated skills string (`""` when none).
  * @property {string} createdAt
+ * @property {string} [jobStatus]
+ * @property {string} [customStatus]
+ * @property {number} [resumeToJobScore]
  */
 
 /**

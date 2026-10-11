@@ -4,6 +4,8 @@ import { JobSkillsField } from "../common/JobSkillsField";
 import { formatDate, copyToClipboard, isSafeHttpUrl, splitJobSkills } from "../../utils/formatters";
 import { mergeJobSummary } from "../../mappers/jobMapper";
 import jobApi from "../../api/jobApi";
+import JobStatusField from "../common/JobStatusField";
+import ResumeMatchScore from "../common/ResumeMatchScore";
 import Spinner from "../../../../common/components/loaders/Spinner";
 import {
   JOBS_EMPLOYMENT_TYPE_PRESETS,
@@ -67,11 +69,21 @@ export default function JobDetailsDrawer({
     if (!job) return;
     try {
       const updated = await fieldUpdater(job.id, val);
-      const merged = mergeJobSummary(job, { ...updated, [fieldKey]: updated?.[fieldKey] ?? val });
+      const patch = { ...updated };
+      if (fieldKey === "jobStatus" && val && typeof val === "object") {
+        patch.jobStatus = updated?.jobStatus ?? val.jobStatus;
+        if (Object.prototype.hasOwnProperty.call(val, "customStatus") || updated?.jobStatus !== "CUSTOM") {
+          patch.customStatus = updated?.customStatus ?? null;
+        }
+      } else if (updated?.[fieldKey] == null && val != null && typeof val !== "object") {
+        patch[fieldKey] = val;
+      }
+      const merged = mergeJobSummary(job, patch);
       setJob(merged);
       if (onJobUpdated) onJobUpdated(merged);
-    } catch {
-      setError(`Failed to update ${fieldKey}.`);
+    } catch (err) {
+      setError(err?.message || `Failed to update ${fieldKey}.`);
+      throw err;
     }
   };
 
@@ -92,11 +104,13 @@ export default function JobDetailsDrawer({
         <div className="w-screen max-w-xl bg-white border-l border-zinc-200 shadow-2xl p-6 flex flex-col justify-between overflow-y-auto overflow-x-hidden hide-scrollbar animate-in slide-in-from-right duration-250 ease-out">
           <div className="min-w-0">
             {/* Header */}
-            <div className="flex items-start justify-between pb-4 border-b border-zinc-100 min-w-0">
+            <div className="flex items-start gap-3 pb-4 border-b border-zinc-100 min-w-0">
               <div className="min-w-0 pr-3 flex-1">
-                {job?.createdAt && (
+                {(job?.createdAt || job?.updatedAt) && (
                   <div className="text-[11px] font-medium text-zinc-400 mb-1">
-                    Created {formatDate(job.createdAt)}
+                    {job.createdAt ? `Created ${formatDate(job.createdAt)}` : null}
+                    {job.createdAt && job.updatedAt ? " · " : null}
+                    {job.updatedAt ? `Updated ${formatDate(job.updatedAt)}` : null}
                   </div>
                 )}
                 {job ? (
@@ -130,6 +144,7 @@ export default function JobDetailsDrawer({
                   <h2 className="text-xl font-bold text-zinc-900">Job Details</h2>
                 )}
               </div>
+              {job ? <ResumeMatchScore score={job.resumeToJobScore} /> : null}
               <button
                 type="button"
                 onClick={onClose}
@@ -156,6 +171,27 @@ export default function JobDetailsDrawer({
               <div className="py-5 space-y-6 text-xs min-w-0">
                 {/* Dynamic Metadata Card Grid (Editable) */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-2xl bg-zinc-50 border border-zinc-200/70 w-full min-w-0">
+                  <div className="min-w-0 sm:col-span-2">
+                    <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider block mb-1">
+                      Job status
+                    </span>
+                    <JobStatusField
+                      job={job}
+                      onSave={(_currentJob, payload) =>
+                        handleFieldUpdate(jobApi.updateJobStatus, payload, "jobStatus")
+                      }
+                    />
+                  </div>
+
+                  <div className="min-w-0">
+                    <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider block mb-1">
+                      Resume
+                    </span>
+                    <p className="px-1 py-0.5 text-xs font-medium text-zinc-900">
+                      {job.resume ? `Resume ${job.resume}` : "No resume linked"}
+                    </p>
+                  </div>
+
                   <div className="min-w-0">
                     <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider block mb-1">
                       Salary
@@ -263,6 +299,23 @@ export default function JobDetailsDrawer({
                   </div>
                 </div>
 
+                <div className="w-full min-w-0">
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <h4 className="text-xs font-bold text-zinc-900">Notes</h4>
+                    <span className="text-[10px] text-zinc-400">{(job.notes || "").length.toLocaleString()}/5,000</span>
+                  </div>
+                  <textarea
+                    value={job.notes || ""}
+                    onChange={(e) => setJob((prev) => ({ ...prev, notes: e.target.value.slice(0, 5000) }))}
+                    onBlur={(e) => {
+                      handleFieldUpdate(jobApi.updateNotes, e.target.value.slice(0, 5000), "notes").catch(() => {});
+                    }}
+                    rows={4}
+                    placeholder="Add notes about this application..."
+                    className="w-full min-w-0 resize-y rounded-2xl border border-zinc-200/80 bg-zinc-50 p-4 text-xs leading-relaxed text-zinc-800 wrap-break-word focus:border-black focus:bg-white focus:outline-none"
+                  />
+                </div>
+
                 {/* Required Skills (Full Width & Vertically Scrollable with Add/Remove) */}
                 <div className="w-full min-w-0">
                   <div className="flex items-center justify-between mb-2">
@@ -286,9 +339,11 @@ export default function JobDetailsDrawer({
                   <textarea
                     value={job.originalDescription || ""}
                     onChange={(e) => setJob((prev) => ({ ...prev, originalDescription: e.target.value }))}
-                    onBlur={(e) =>
-                      handleFieldUpdate(jobApi.updateOriginalDescription, e.target.value, "originalDescription")
-                    }
+                    onBlur={(e) => {
+                      handleFieldUpdate(jobApi.updateOriginalDescription, e.target.value, "originalDescription").catch(
+                        () => {}
+                      );
+                    }}
                     rows={4}
                     placeholder="Original pasted job text..."
                     className="w-full p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80 focus:bg-white focus:border-black focus:outline-none transition-all text-xs text-zinc-800 leading-relaxed resize-y wrap-break-word min-w-0"
@@ -319,7 +374,9 @@ export default function JobDetailsDrawer({
                   <textarea
                     value={job.description || ""}
                     onChange={(e) => setJob((prev) => ({ ...prev, description: e.target.value }))}
-                    onBlur={(e) => handleFieldUpdate(jobApi.updateDescription, e.target.value, "description")}
+                    onBlur={(e) => {
+                      handleFieldUpdate(jobApi.updateDescription, e.target.value, "description").catch(() => {});
+                    }}
                     rows={5}
                     placeholder="Paste or edit job description..."
                     className="w-full p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80 focus:bg-white focus:border-black focus:outline-none transition-all text-xs text-zinc-800 leading-relaxed resize-y wrap-break-word min-w-0"

@@ -7,11 +7,12 @@ import {
   ViewButton,
   JobRecordActions,
   JobSalaryField,
+  JobScoreValue,
   JobSkillsField,
   JobTitleField,
-  JobTypeField,
-  JobWorkModeField,
 } from "../common/JobRecordFields";
+import JobStatusField from "../common/JobStatusField";
+import jobApi from "../../api/jobApi";
 import { createJobFieldHandlers } from "../../utils/jobFieldHandlers";
 
 export default function JobsGridView({
@@ -45,7 +46,7 @@ export default function JobsGridView({
   }
 
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto p-1.5">
+    <div className="hide-scrollbar flex-1 min-h-0 overflow-y-auto p-1.5">
       {updateError ? (
         <p className="mb-1 px-2 py-1.5 text-[11px] text-danger bg-red-50 border border-red-200 rounded-lg" role="alert">
           {updateError}
@@ -55,21 +56,34 @@ export default function JobsGridView({
         {jobs.map((job) => (
           <article
             key={job.id}
-            className="rounded-lg border border-line bg-white p-3 shadow-xs hover:shadow-sm hover:border-ink/20 transition-all cursor-pointer flex flex-col gap-2.5 min-w-0"
+            className="flex min-h-[15.5rem] min-w-0 cursor-pointer flex-col gap-3 rounded-lg border border-line bg-white p-3.5 shadow-xs transition-all hover:border-ink/20 hover:shadow-sm"
             onClick={() => onViewClick(job.id)}
           >
             <div className="flex items-start justify-between gap-1.5 min-w-0">
               <div className="min-w-0 flex-1" onClick={(e) => e.stopPropagation()}>
-                <JobTitleField job={job} onSave={fields.title} />
+                <JobTitleField job={job} onSave={fields.title} lines={2} />
                 <div className="mt-0.5">
-                  <JobCompanyField job={job} onSave={fields.company} />
+                  <JobCompanyField job={job} onSave={fields.company} lines={2} />
                 </div>
               </div>
-              <div onClick={(e) => e.stopPropagation()}>
+              <div className="inline-flex shrink-0 items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                <JobScoreValue job={job} />
                 <JobRecordActions
                   job={job}
                   onViewClick={onViewClick}
                   onDeleteClick={onDeleteClick}
+                  onNotesSaved={(savedJob) => {
+                    const savedNotes = typeof savedJob?.notes === "string" ? savedJob.notes : "";
+                    return onUpdate(
+                      job,
+                      "notes",
+                      (id, value) =>
+                        value === savedNotes ? Promise.resolve(savedJob) : jobApi.updateNotes(id, value),
+                      savedNotes,
+                      "Notes",
+                      typeof job.notes === "string" ? job.notes : ""
+                    );
+                  }}
                   compact
                   showInteract={false}
                   showView={false}
@@ -82,35 +96,31 @@ export default function JobsGridView({
                 <span className="text-[9px] font-semibold uppercase tracking-wide text-muted block mb-0.5">
                   Location
                 </span>
-                <JobLocationField job={job} onSave={fields.location} />
+                <JobLocationField job={job} onSave={fields.location} lines={2} />
               </div>
               <div className="min-w-0">
                 <span className="text-[9px] font-semibold uppercase tracking-wide text-muted block mb-0.5">
-                  Work mode
+                  Job status
                 </span>
-                <JobWorkModeField job={job} onSave={fields.workMode} />
-              </div>
-              <div className="min-w-0">
-                <span className="text-[9px] font-semibold uppercase tracking-wide text-muted block mb-0.5">Type</span>
-                <JobTypeField job={job} onSave={fields.employmentType} />
+                <JobStatusField job={job} onSave={fields.jobStatus} />
               </div>
               <div className="min-w-0">
                 <span className="text-[9px] font-semibold uppercase tracking-wide text-muted block mb-0.5">
                   Experience
                 </span>
-                <JobExperienceField job={job} onSave={fields.experience} />
+                <JobExperienceField job={job} onSave={fields.experience} lines={2} />
               </div>
-              <div className="min-w-0 col-span-2">
+              <div className="min-w-0">
                 <span className="text-[9px] font-semibold uppercase tracking-wide text-muted block mb-0.5">
                   Salary
                 </span>
-                <JobSalaryField job={job} onSave={fields.salary} />
+                <JobSalaryField job={job} onSave={fields.salary} lines={2} />
               </div>
               <div className="min-w-0 col-span-2">
                 <span className="text-[9px] font-semibold uppercase tracking-wide text-muted block mb-0.5">
                   Skills
                 </span>
-                <JobSkillsField job={job} onUpdate={onUpdate} maxRows={2} />
+                <JobSkillsField job={job} onUpdate={onUpdate} maxRows={3} />
               </div>
             </div>
 

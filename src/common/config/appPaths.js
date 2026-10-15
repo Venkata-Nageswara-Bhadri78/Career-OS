@@ -2,6 +2,7 @@ export const APP_PATHS = Object.freeze({
   LANDING: "/",
   LOGIN: "/login",
   REGISTER: "/register",
+  PRE_COMPLETE: "/pre-complete",
   TERMS: "/terms",
   PRIVACY: "/privacy",
   DASHBOARD: "/dashboard",

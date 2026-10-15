@@ -118,6 +118,14 @@ export function validateVerifyEmailForm(form) {
   });
 }
 
+export function validateSetupPasswordForm(form) {
+  return compactErrors({
+    otp: validateOtp(form.otp),
+    newPassword: validatePassword(form.newPassword),
+    confirmPassword: form.newPassword !== form.confirmPassword ? "Passwords do not match." : "",
+  });
+}
+
 function compactErrors(fieldErrors) {
   const next = {};
   Object.entries(fieldErrors).forEach(([key, value]) => {

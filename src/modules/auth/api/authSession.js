@@ -2,9 +2,10 @@ import { API_BASE_URL } from "../../../common/api/apiConfig";
 import { AUTH_ENDPOINTS } from "./authEndpoints";
 import { AUTH_PATHS, isAuthPublicPath } from "../config/authConfig";
 import { mapAuthTokens } from "../mappers/authMapper";
-import { clearTokens, getRefreshToken, saveTokens } from "./tokenStorage";
+import { clearTokens, getRefreshToken, saveTokens, setOnboardingComplete } from "./tokenStorage";
 
 const SESSION_ENDED_EVENT = "career-os:auth-session-ended";
+export const ONBOARDING_REQUIRED_EVENT = "career-os:onboarding-required";
 
 let refreshPromise = null;
 
@@ -80,6 +81,19 @@ export function endSession({ redirect = true } = {}) {
   const path = window.location.pathname;
   if (isAuthPublicPath(path) || path === AUTH_PATHS.LANDING) return;
   window.location.assign(AUTH_PATHS.LOGIN);
+}
+
+export function requireUsernameOnboarding() {
+  setOnboardingComplete(false);
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent(ONBOARDING_REQUIRED_EVENT));
+}
+
+export function subscribeToOnboardingRequired(handler) {
+  if (typeof window === "undefined") return () => {};
+  const listener = () => handler();
+  window.addEventListener(ONBOARDING_REQUIRED_EVENT, listener);
+  return () => window.removeEventListener(ONBOARDING_REQUIRED_EVENT, listener);
 }
 
 export function subscribeToSessionEnd(handler) {

@@ -6,6 +6,7 @@ import AuthPasswordField from "../sub-components/AuthPasswordField";
 import AuthPrimaryButton from "../sub-components/AuthPrimaryButton";
 import AuthTextField from "../sub-components/AuthTextField";
 import AuthFormShell from "./AuthFormShell";
+import GoogleContinue from "./GoogleContinue";
 
 export default function RegisterForm() {
   const { form, fieldErrors, error, isSubmitting, cooldown, updateField, submit } = useRegister();
@@ -66,6 +67,7 @@ export default function RegisterForm() {
           {cooldown > 0 ? `Retry in ${cooldown}s` : "Register"}
         </AuthPrimaryButton>
       </form>
+      <GoogleContinue />
     </AuthFormShell>
   );
 }

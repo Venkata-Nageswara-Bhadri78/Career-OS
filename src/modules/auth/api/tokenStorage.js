@@ -1,6 +1,7 @@
 const ACCESS_KEY = "career_os_access_token";
 const REFRESH_KEY = "career_os_refresh_token";
 const TYPE_KEY = "career_os_token_type";
+const ONBOARDING_KEY = "career_os_onboarding_complete";
 const PERSIST_KEY = "career_os_persist_session";
 
 const LEGACY_ACCESS_KEYS = [
@@ -15,6 +16,7 @@ const LEGACY_TYPE_KEYS = ["auth_token_type"];
 let memoryAccessToken = null;
 let memoryRefreshToken = null;
 let memoryTokenType = "Bearer";
+let memoryOnboardingComplete = null;
 
 function canUseStorage() {
   try {
@@ -87,19 +89,46 @@ export function setPersistSession(persist) {
   writeToken(ACCESS_KEY, memoryAccessToken);
   writeToken(REFRESH_KEY, memoryRefreshToken);
   writeToken(TYPE_KEY, memoryTokenType);
+  if (typeof memoryOnboardingComplete === "boolean") {
+    writeToken(ONBOARDING_KEY, memoryOnboardingComplete ? "1" : "0");
+  }
 }
 
-export const saveTokens = ({ accessToken, refreshToken, tokenType = "Bearer" } = {}, options = {}) => {
+export const saveTokens = (
+  { accessToken, refreshToken, tokenType = "Bearer", onboardingComplete } = {},
+  options = {}
+) => {
   if (typeof options.persist === "boolean") {
     setPersistSession(options.persist);
   }
   if (accessToken) memoryAccessToken = accessToken;
   if (refreshToken) memoryRefreshToken = refreshToken;
   if (tokenType) memoryTokenType = tokenType;
+  if (typeof onboardingComplete === "boolean") {
+    memoryOnboardingComplete = onboardingComplete;
+  }
   writeToken(ACCESS_KEY, memoryAccessToken);
   writeToken(REFRESH_KEY, memoryRefreshToken);
   writeToken(TYPE_KEY, memoryTokenType);
+  if (typeof memoryOnboardingComplete === "boolean") {
+    writeToken(ONBOARDING_KEY, memoryOnboardingComplete ? "1" : "0");
+  }
 };
+
+export function setOnboardingComplete(value) {
+  if (typeof value !== "boolean") return;
+  memoryOnboardingComplete = value;
+  writeToken(ONBOARDING_KEY, value ? "1" : "0");
+}
+
+export function getOnboardingComplete() {
+  if (typeof memoryOnboardingComplete === "boolean") return memoryOnboardingComplete;
+  const stored = readFromStorages(ONBOARDING_KEY);
+  if (stored === "1") memoryOnboardingComplete = true;
+  else if (stored === "0") memoryOnboardingComplete = false;
+  else return null;
+  return memoryOnboardingComplete;
+}
 
 export const getAccessToken = () => {
   if (memoryAccessToken) return memoryAccessToken;
@@ -148,19 +177,23 @@ export const clearTokens = () => {
   memoryAccessToken = null;
   memoryRefreshToken = null;
   memoryTokenType = "Bearer";
+  memoryOnboardingComplete = null;
   removeEverywhere(ACCESS_KEY);
   removeEverywhere(REFRESH_KEY);
   removeEverywhere(TYPE_KEY);
+  removeEverywhere(ONBOARDING_KEY);
 };
 
 export const getStoredTokens = () => ({
   accessToken: getAccessToken(),
   refreshToken: getRefreshToken(),
   tokenType: getTokenType(),
+  onboardingComplete: getOnboardingComplete(),
 });
 
 export const STORAGE_KEYS = Object.freeze({
   ACCESS_TOKEN: ACCESS_KEY,
   REFRESH_TOKEN: REFRESH_KEY,
   TOKEN_TYPE: TYPE_KEY,
+  ONBOARDING_COMPLETE: ONBOARDING_KEY,
 });

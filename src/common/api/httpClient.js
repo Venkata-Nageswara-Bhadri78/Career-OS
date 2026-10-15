@@ -1,6 +1,6 @@
 import { API_BASE_URL, INTERNAL_API_HEADER, INTERNAL_API_PREFIX } from "./apiConfig";
-import { ApiError, AUTH_MESSAGES, CLIENT_COPY, isApiError } from "./apiError";
-import { endSession, getAuthorizationHeader, isPublicEndpoint, refreshSession } from "./sessionBridge";
+import { ApiError, AUTH_MESSAGES, CLIENT_COPY, isApiError, isCompleteUsernameDenied } from "./apiError";
+import { endSession, getAuthorizationHeader, isPublicEndpoint, refreshSession, requireUsernameOnboarding } from "./sessionBridge";
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 
@@ -139,6 +139,12 @@ function unauthorizedError(data, retryAfter) {
   });
 }
 
+function noteUsernameGate(status, message) {
+  if (isCompleteUsernameDenied(status, message)) {
+    requireUsernameOnboarding();
+  }
+}
+
 export async function request({
   endpoint,
   method = "GET",
@@ -187,6 +193,7 @@ export async function request({
     const retryAfter = parseRetryAfter(response, data);
     const message = envelopeMessage(data) || response.statusText || CLIENT_COPY.generic;
     const error = new ApiError({ message, status: response.status, data, retryAfter });
+    noteUsernameGate(response.status, message);
 
     if (shouldHardLogout(response.status, message)) {
       endSession({ redirect: true });
@@ -266,6 +273,8 @@ export async function download(endpoint, options = {}) {
 
     if (!response.ok) {
       const { data, message, retryAfter } = await messagePeek();
+
+      noteUsernameGate(response.status, message);
 
       if (shouldHardLogout(response.status, message)) {
         endSession({ redirect: true });

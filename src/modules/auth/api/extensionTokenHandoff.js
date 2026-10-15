@@ -1,5 +1,7 @@
+import { AUTH_MESSAGES } from "../../../common/api/apiError";
 import { post } from "../../../common/api/httpClient";
 import { AUTH_ENDPOINTS } from "./authEndpoints";
+import { getOnboardingComplete } from "./tokenStorage";
 
 export const COPILOT_EXTENSION_ID = String(
   import.meta.env.VITE_EXTENSION_ID || "lghllhgdcekacmdoolnekkkoffcmcaeo"
@@ -16,6 +18,14 @@ function extensionPayload(data) {
 }
 
 export async function mintAndPushExtensionToken() {
+  if (getOnboardingComplete() === false) {
+    return {
+      ok: false,
+      httpStatus: 403,
+      error: AUTH_MESSAGES.COMPLETE_USERNAME,
+    };
+  }
+
   try {
     const response = await post(AUTH_ENDPOINTS.EXTENSION_TOKEN, null);
     const data = response?.data;

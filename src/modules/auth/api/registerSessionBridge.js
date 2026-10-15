@@ -1,6 +1,6 @@
 import { registerSessionBridge } from "../../../common/api/sessionBridge";
 import { isAuthPublicEndpoint } from "./authEndpoints";
-import { endSession, refreshSession } from "./authSession";
+import { endSession, refreshSession, requireUsernameOnboarding } from "./authSession";
 import { getAuthorizationHeader } from "./tokenStorage";
 
 registerSessionBridge({
@@ -8,4 +8,5 @@ registerSessionBridge({
   refreshSession,
   endSession,
   isPublicEndpoint: isAuthPublicEndpoint,
+  requireUsernameOnboarding,
 });

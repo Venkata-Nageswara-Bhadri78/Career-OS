@@ -13,6 +13,6 @@ export function CommonPublicRoutes({ landingElement }) {
   ];
 }
 
-export function CommonProtectedRoutes() {
-  return <Route key="settings" path={APP_PATHS.SETTINGS} element={<SettingsPage />} />;
+export function CommonProtectedRoutes({ settingsElement } = {}) {
+  return <Route key="settings" path={APP_PATHS.SETTINGS} element={settingsElement ?? <SettingsPage />} />;
 }

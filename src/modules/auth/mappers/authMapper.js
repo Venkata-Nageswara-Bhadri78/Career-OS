@@ -1,3 +1,4 @@
+import { AUTH_MESSAGES } from "../../../common/api/apiError";
 import { AUTH_COPY } from "../utils/authMessages";
 import { parseBackendFieldErrors } from "../utils/authValidation";
 
@@ -6,21 +7,28 @@ export function mapAuthTokens(data) {
   const accessToken = data.accessToken;
   const refreshToken = data.refreshToken;
   if (!accessToken || !refreshToken) return null;
-  return {
+  const tokens = {
     accessToken,
     refreshToken,
     tokenType: data.tokenType || "Bearer",
   };
+  if (typeof data.onboardingComplete === "boolean") {
+    tokens.onboardingComplete = data.onboardingComplete;
+  }
+  return tokens;
 }
 
 export function mapCurrentUser(data) {
   if (!data || typeof data !== "object") return null;
+  const username = typeof data.username === "string" ? data.username.trim() : "";
   return {
     id: data.id,
-    username: data.username ?? "",
+    username: username || null,
     fullName: data.fullName ?? "",
     email: data.email ?? "",
     role: data.role ?? "USER",
+    passwordConfigured: data.passwordConfigured === true,
+    googleLinked: data.googleLinked === true,
   };
 }
 
@@ -41,7 +49,9 @@ export function mapAuthError(error) {
     message = AUTH_COPY.mailUnavailable;
   } else if (status === 401) {
     const lower = rawMessage.toLowerCase();
-    if (lower.includes("refresh token")) {
+    if (rawMessage === AUTH_MESSAGES.INVALID_GOOGLE_TOKEN || rawMessage === AUTH_MESSAGES.ACCOUNT_DISABLED) {
+      message = rawMessage;
+    } else if (lower.includes("refresh token")) {
       message = AUTH_COPY.sessionReuse;
     } else if (lower.includes("invalid email or password")) {
       message = AUTH_COPY.loginGenericFailure;

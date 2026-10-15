@@ -6,6 +6,7 @@ import AuthPasswordField from "../sub-components/AuthPasswordField";
 import AuthPrimaryButton from "../sub-components/AuthPrimaryButton";
 import AuthTextField from "../sub-components/AuthTextField";
 import AuthFormShell from "./AuthFormShell";
+import GoogleContinue from "./GoogleContinue";
 
 export default function LoginForm() {
   const { form, fieldErrors, error, isSubmitting, cooldown, updateField, submit } = useLogin();
@@ -62,6 +63,7 @@ export default function LoginForm() {
           {cooldown > 0 ? `Retry in ${cooldown}s` : "Sign in"}
         </AuthPrimaryButton>
       </form>
+      <GoogleContinue rememberMe={form.rememberMe} />
     </AuthFormShell>
   );
 }

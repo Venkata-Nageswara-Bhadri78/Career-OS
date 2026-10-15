@@ -7,6 +7,11 @@ export const AUTH_BASE_PATH = "/api/v1/auth";
 export const AUTH_ENDPOINTS = Object.freeze({
   REGISTER: `${AUTH_BASE_PATH}/register`,
   LOGIN: `${AUTH_BASE_PATH}/login`,
+  GOOGLE: `${AUTH_BASE_PATH}/google`,
+  GOOGLE_LINK: `${AUTH_BASE_PATH}/google/link`,
+  COMPLETE_USERNAME: `${AUTH_BASE_PATH}/complete-username`,
+  SETUP_PASSWORD_REQUEST: `${AUTH_BASE_PATH}/setup-password/request`,
+  SETUP_PASSWORD_CONFIRM: `${AUTH_BASE_PATH}/setup-password/confirm`,
   EXTENSION_TOKEN: `${AUTH_BASE_PATH}/extension-token`,
   VERIFY_EMAIL: `${AUTH_BASE_PATH}/verify-email`,
   RESEND_OTP: `${AUTH_BASE_PATH}/resend-otp`,
@@ -21,6 +26,7 @@ export const AUTH_ENDPOINTS = Object.freeze({
 export const AUTH_PUBLIC_ENDPOINTS = Object.freeze([
   AUTH_ENDPOINTS.REGISTER,
   AUTH_ENDPOINTS.LOGIN,
+  AUTH_ENDPOINTS.GOOGLE,
   AUTH_ENDPOINTS.VERIFY_EMAIL,
   AUTH_ENDPOINTS.RESEND_OTP,
   AUTH_ENDPOINTS.FORGOT_PASSWORD,

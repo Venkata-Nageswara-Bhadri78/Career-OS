@@ -9,9 +9,12 @@
  *
  * @typedef {Object} ShellUser
  * @property {number|string} [id]
- * @property {string} [username]
+ * @property {string|null} [username]
  * @property {string} [fullName]
  * @property {string} [email]
+ * @property {string} [role]
+ * @property {boolean} [passwordConfigured]
+ * @property {boolean} [googleLinked]
  */
 
 export {};

@@ -1,3 +1,15 @@
+function readGoogleWebClientId() {
+  const value = String(import.meta.env.VITE_GOOGLE_CLIENT_ID ?? "").trim();
+  const lower = value.toLowerCase();
+  if (!value) return "";
+  if (value.includes("<") || lower.includes("your-google") || lower.includes("changeme") || lower.includes("placeholder")) {
+    return "";
+  }
+  return value;
+}
+
+export const GOOGLE_WEB_CLIENT_ID = readGoogleWebClientId();
+
 export const AUTH_PATHS = Object.freeze({
   LANDING: "/",
   LOGIN: "/login",
@@ -6,6 +18,7 @@ export const AUTH_PATHS = Object.freeze({
   FORGOT_PASSWORD: "/forgot-password",
   RESET_PASSWORD: "/reset-password",
   VERIFY_EMAIL: "/verify-email",
+  PRE_COMPLETE: "/pre-complete",
   DASHBOARD: "/dashboard",
   SETTINGS: "/settings",
 });
@@ -36,6 +49,8 @@ export const AUTH_CONFIG = Object.freeze({
   passwordMax: 72,
   otpLength: 6,
   resetTokenMax: 128,
+  idTokenMax: 4096,
+  googleClientId: GOOGLE_WEB_CLIENT_ID,
   resendCooldownMs: 60_000,
   specialChars: "@$!%*?&#^+=",
   supportEmail: "support@career-os.app",

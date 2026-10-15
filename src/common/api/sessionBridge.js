@@ -7,6 +7,7 @@ let bridge = {
   refreshSession: unset,
   endSession: () => {},
   isPublicEndpoint: () => false,
+  requireUsernameOnboarding: () => {},
 };
 
 export function registerSessionBridge(nextBridge) {
@@ -21,6 +22,10 @@ export function registerSessionBridge(nextBridge) {
     endSession: typeof nextBridge.endSession === "function" ? nextBridge.endSession : bridge.endSession,
     isPublicEndpoint:
       typeof nextBridge.isPublicEndpoint === "function" ? nextBridge.isPublicEndpoint : bridge.isPublicEndpoint,
+    requireUsernameOnboarding:
+      typeof nextBridge.requireUsernameOnboarding === "function"
+        ? nextBridge.requireUsernameOnboarding
+        : bridge.requireUsernameOnboarding,
   };
 }
 
@@ -49,5 +54,13 @@ export function endSession(options) {
     bridge.endSession(options);
   } catch {
     /* session teardown must never throw into UI */
+  }
+}
+
+export function requireUsernameOnboarding() {
+  try {
+    bridge.requireUsernameOnboarding();
+  } catch {
+    /* onboarding redirect must never throw into request handling */
   }
 }

@@ -1,6 +1,6 @@
 import { useSettings } from "../hooks/useSettings";
 
-export default function SettingsPage() {
+export default function SettingsPage({ children = null }) {
   const { user, themeId, themes, setTheme, busy, error, handleLogout, handleLogoutAll } = useSettings();
 
   return (
@@ -77,6 +77,7 @@ export default function SettingsPage() {
           </button>
         </div>
       </section>
+      {children}
     </div>
   );
 }

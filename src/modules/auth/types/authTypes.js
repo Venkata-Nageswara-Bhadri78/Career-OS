@@ -3,15 +3,18 @@
  * @property {string} accessToken
  * @property {string} refreshToken
  * @property {string} tokenType
+ * @property {boolean} [onboardingComplete]
  */
 
 /**
  * @typedef {Object} AuthUser
- * @property {number|string} id
- * @property {string} username
+ * @property {number|string|null} id
+ * @property {string|null} username
  * @property {string} fullName
  * @property {string} email
  * @property {string} role
+ * @property {boolean} passwordConfigured
+ * @property {boolean} googleLinked
  */
 
 /**

@@ -4,8 +4,15 @@ import ThemeProvider from "./common/theme/ThemeProvider";
 import AuthProvider from "./modules/auth/hooks/AuthProvider";
 import { AuthRouteTree } from "./modules/auth/routes/authRoutes";
 import ProtectedRoute from "./modules/auth/routes/ProtectedRoute";
+import OnboardingGate from "./modules/auth/routes/OnboardingGate";
+import RequireCompleteProfile from "./modules/auth/routes/RequireCompleteProfile";
 import AuthBootScreen from "./modules/auth/components/loaders/AuthBootScreen";
+import AuthLayout from "./modules/auth/components/main-components/AuthLayout";
+import LinkGoogleSection from "./modules/auth/components/main-components/LinkGoogleSection";
+import PasswordSetupSection from "./modules/auth/components/main-components/PasswordSetupSection";
+import PreCompletePage from "./modules/auth/pages/PreCompletePage";
 import { useAuth } from "./modules/auth/hooks/useAuth";
+import SettingsPage from "./common/pages/SettingsPage";
 import MainLayout from "./common/components/layout/MainLayout";
 import ChatHistorySlotProvider from "./common/components/layout/ChatHistorySlotProvider";
 import ShellSessionProvider from "./common/session/ShellSessionProvider";
@@ -24,9 +31,11 @@ import { AiRouteTree } from "./modules/ai/routes/aiRoutes";
 import { UserRouteTree } from "./modules/user/routes/userRoutes";
 
 function LandingRoute() {
-  const { isAuthenticated, isBooting } = useAuth();
+  const { isAuthenticated, isBooting, needsUsername } = useAuth();
   if (isBooting) return <AuthBootScreen />;
-  if (isAuthenticated) return <Navigate to={APP_PATHS.DASHBOARD} replace />;
+  if (isAuthenticated) {
+    return <Navigate to={needsUsername ? APP_PATHS.PRE_COMPLETE : APP_PATHS.DASHBOARD} replace />;
+  }
   return <LandingPage />;
 }
 
@@ -97,26 +106,40 @@ function App() {
     <ThemeProvider>
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
-            {CommonPublicRoutes({ landingElement: <LandingRoute /> })}
-            {AuthRouteTree()}
+          <OnboardingGate>
+            <Routes>
+              {CommonPublicRoutes({ landingElement: <LandingRoute /> })}
+              {AuthRouteTree()}
 
-            <Route element={<ProtectedRoute />}>
-              <Route element={<ProtectedAppShell />}>
-                <Route path={APP_PATHS.DASHBOARD} element={<JobsDashboardEntry />} />
-                <Route path={APP_PATHS.JOB_DRAFTS} element={<JobDraftsPage />} />
-                <Route path={`${APP_PATHS.JOB_DRAFTS}/:draftId`} element={<JobDraftsPage />} />
-                {UserRouteTree()}
-                {CommonProtectedRoutes()}
-                <Route path="/jobs" element={<Navigate to={APP_PATHS.DASHBOARD} replace />} />
-                {ChatAssistantRouteTree()}
-                <Route path="/jobs/:jobId" element={<JobDetailsPage />} />
-                {AiRouteTree()}
+              <Route element={<ProtectedRoute />}>
+                <Route element={<AuthLayout />}>
+                  <Route path={APP_PATHS.PRE_COMPLETE} element={<PreCompletePage />} />
+                </Route>
+                <Route element={<RequireCompleteProfile />}>
+                  <Route element={<ProtectedAppShell />}>
+                    <Route path={APP_PATHS.DASHBOARD} element={<JobsDashboardEntry />} />
+                    <Route path={APP_PATHS.JOB_DRAFTS} element={<JobDraftsPage />} />
+                    <Route path={`${APP_PATHS.JOB_DRAFTS}/:draftId`} element={<JobDraftsPage />} />
+                    {UserRouteTree()}
+                    {CommonProtectedRoutes({
+                      settingsElement: (
+                        <SettingsPage>
+                          <PasswordSetupSection />
+                          <LinkGoogleSection />
+                        </SettingsPage>
+                      ),
+                    })}
+                    <Route path="/jobs" element={<Navigate to={APP_PATHS.DASHBOARD} replace />} />
+                    {ChatAssistantRouteTree()}
+                    <Route path="/jobs/:jobId" element={<JobDetailsPage />} />
+                    {AiRouteTree()}
+                  </Route>
+                </Route>
               </Route>
-            </Route>
 
-            <Route path="*" element={<Navigate to={APP_PATHS.LANDING} replace />} />
-          </Routes>
+              <Route path="*" element={<Navigate to={APP_PATHS.LANDING} replace />} />
+            </Routes>
+          </OnboardingGate>
         </AuthProvider>
       </BrowserRouter>
     </ThemeProvider>

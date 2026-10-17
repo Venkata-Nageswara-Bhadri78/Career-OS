@@ -56,6 +56,14 @@ export default function CommunityAccountGate({ children }) {
       title="Jobs Community is unavailable"
       message="This community account could not be opened."
       alert
-    />
+    >
+      <button
+        type="button"
+        onClick={refresh}
+        className="mt-4 inline-flex h-10 items-center justify-center rounded-xl bg-ink px-4 text-sm font-semibold text-white"
+      >
+        Try again
+      </button>
+    </CommunityStatusPanel>
   );
 }

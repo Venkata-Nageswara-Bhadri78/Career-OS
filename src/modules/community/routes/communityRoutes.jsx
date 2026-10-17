@@ -10,6 +10,7 @@ import { useCommunityMemberships } from "../hooks/useCommunityMemberships";
 import CommunityHomePage from "../pages/CommunityHomePage";
 import CommunityRoomPage from "../pages/CommunityRoomPage";
 import CommunityStartPage from "../pages/CommunityStartPage";
+import "../styles/community.css";
 
 function CommunityMembershipRefresh() {
   const { state } = useCommunityAccount();
@@ -29,10 +30,12 @@ function CommunityMembershipRefresh() {
 function CommunityShell() {
   return (
     <CommunityAccountProvider>
-      <CommunityMembershipRefresh />
-      <CommunityAccountGate>
-        <Outlet />
-      </CommunityAccountGate>
+      <div className="community-service flex h-full min-h-0 w-full min-w-0 flex-col overflow-x-hidden overflow-y-auto">
+        <CommunityMembershipRefresh />
+        <CommunityAccountGate>
+          <Outlet />
+        </CommunityAccountGate>
+      </div>
     </CommunityAccountProvider>
   );
 }

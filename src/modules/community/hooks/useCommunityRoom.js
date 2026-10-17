@@ -27,6 +27,7 @@ export function useCommunityRoom(communityId) {
   const [memberCount, setMemberCount] = useState(null);
   const [creator, setCreator] = useState(false);
   const [membersOpen, setMembersOpen] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const [membersLoading, setMembersLoading] = useState(false);
   const [membersError, setMembersError] = useState("");
   const [leaveOpen, setLeaveOpen] = useState(false);
@@ -48,6 +49,7 @@ export function useCommunityRoom(communityId) {
     setMemberCount(null);
     setCreator(false);
     setMembersOpen(false);
+    setDetailsOpen(false);
     setLeaveOpen(false);
     setError("");
     setMembersError("");
@@ -256,9 +258,15 @@ export function useCommunityRoom(communityId) {
   };
 
   const openMembers = () => {
+    setDetailsOpen(false);
     setMembersError("");
     setMembersLoading(true);
     setMembersOpen(true);
+  };
+
+  const openDetails = () => {
+    setMembersOpen(false);
+    setDetailsOpen(true);
   };
 
   return {
@@ -269,6 +277,7 @@ export function useCommunityRoom(communityId) {
     memberCount,
     creator,
     membersOpen,
+    detailsOpen,
     membersLoading,
     membersError,
     leaveOpen,
@@ -276,6 +285,8 @@ export function useCommunityRoom(communityId) {
     error,
     openMembers,
     closeMembers: () => setMembersOpen(false),
+    openDetails,
+    closeDetails: () => setDetailsOpen(false),
     requestLeave: () => setLeaveOpen(true),
     cancelLeave: () => {
       if (!leaving) setLeaveOpen(false);

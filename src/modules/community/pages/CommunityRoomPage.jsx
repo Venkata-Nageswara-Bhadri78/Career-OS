@@ -1,5 +1,6 @@
 import { Link, useParams } from "react-router-dom";
 import { APP_PATHS } from "../../../common/config/appPaths";
+import CommunityDetailsPanel from "../components/main-components/CommunityDetailsPanel";
 import CommunityJoinCard from "../components/main-components/CommunityJoinCard";
 import CommunityLeaveDialog from "../components/main-components/CommunityLeaveDialog";
 import CommunityLiveProvider from "../components/main-components/CommunityLiveProvider";
@@ -20,10 +21,10 @@ function CommunityRoomBody({ room }) {
     <div className="relative flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
       <CommunityRoomHeader
         summary={room.header}
-        memberCount={room.memberCount}
         onlineCount={live.onlineCount}
         presenceKnown={live.presenceKnown}
         onOpenMembers={room.openMembers}
+        onOpenDetails={room.openDetails}
         onLeave={room.requestLeave}
       />
       <CommunityConnectionStatus state={live.socketState} reason={live.socketReason} />
@@ -34,6 +35,15 @@ function CommunityRoomBody({ room }) {
       ) : null}
       <div className="relative flex min-h-0 min-w-0 flex-1">
         <CommunityTranscript />
+        {room.detailsOpen ? (
+          <CommunityDetailsPanel
+            summary={room.header}
+            memberCount={room.memberCount}
+            onlineCount={live.onlineCount}
+            presenceKnown={live.presenceKnown}
+            onClose={room.closeDetails}
+          />
+        ) : null}
         {room.membersOpen ? (
           <CommunityMemberPanel
             members={room.members}

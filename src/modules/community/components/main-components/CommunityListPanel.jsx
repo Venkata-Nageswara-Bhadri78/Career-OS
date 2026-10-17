@@ -4,6 +4,7 @@ import { APP_PATHS } from "../../../../common/config/appPaths";
 import { ChevronIcon } from "../../../../common/components/layout/ShellIcons";
 import { useCommunityListSlot } from "../../hooks/communityListContext";
 import { communityInitials, communityJobLine, communityLabel, isCommunityAreaPath } from "../../utils/communityDisplay";
+import "../../styles/community.css";
 
 export default function CommunityListPanel() {
   const location = useLocation();
@@ -21,7 +22,7 @@ export default function CommunityListPanel() {
 
   return (
     <section
-      className={`flex min-w-0 flex-col overflow-hidden rounded-xl border border-line bg-bg ${
+      className={`community-service flex min-w-0 flex-col overflow-hidden rounded-xl border border-line bg-bg ${
         expanded ? "min-h-0 flex-1" : "shrink-0"
       }`}
       aria-labelledby={labelId}

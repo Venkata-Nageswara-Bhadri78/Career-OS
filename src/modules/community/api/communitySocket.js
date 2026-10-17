@@ -17,11 +17,13 @@ let client = null;
 let state = COMMUNITY_SOCKET_STATES.IDLE;
 let stateReason = "";
 let connectionEpoch = 0;
+let socketGeneration = 0;
 let manualClose = false;
 let stopped = false;
 let reconnectTimer = null;
 let reconnectDelay = COMMUNITY_RECONNECT.INITIAL_DELAY_MS;
 let userQueuesBound = false;
+const desiredRooms = new Set();
 const roomSubscriptions = new Map();
 const listeners = new Set();
 
@@ -68,10 +70,21 @@ function parseJson(body) {
   }
 }
 
+/** STOMP payloads are the DTO. Unwrap a REST-style envelope if one appears. */
+function unwrapSocketBody(body) {
+  if (!body || typeof body !== "object" || Array.isArray(body)) return body;
+  const nested = body.data;
+  if (!nested || typeof nested !== "object") return body;
+  if (nested.id != null || nested.sender != null || nested.code != null || Array.isArray(nested.online)) {
+    return nested;
+  }
+  return body;
+}
+
 function frameMessage(frame) {
   const header = typeof frame?.headers?.message === "string" ? frame.headers.message.trim() : "";
   if (header) return header;
-  const body = parseJson(frame?.body);
+  const body = unwrapSocketBody(parseJson(frame?.body));
   if (typeof body?.message === "string" && body.message.trim()) return body.message.trim();
   return typeof frame?.body === "string" ? frame.body.trim() : "";
 }
@@ -112,90 +125,125 @@ function scheduleReconnect() {
 
 function bindUserQueues() {
   if (!client?.connected || userQueuesBound) return;
-  client.subscribe(COMMUNITY_SOCKET_DEST.USER_ERRORS, (frame) => {
-    const body = parseJson(frame.body);
-    emit({
-      type: "error",
-      code: typeof body?.code === "string" ? body.code : "",
-      message: typeof body?.message === "string" ? body.message : "",
-    });
-  }, { id: "community-user-errors" });
-  client.subscribe(COMMUNITY_SOCKET_DEST.USER_MEMBERSHIP, (frame) => {
-    const body = parseJson(frame.body);
-    if (!body) return;
-    emit({
-      type: "membership",
-      communityId: body.communityId ?? null,
-      userId: body.userId ?? null,
-      membership: typeof body.membership === "string" ? body.membership : "",
-    });
-  }, { id: "community-user-membership" });
-  client.subscribe(COMMUNITY_SOCKET_DEST.USER_PRESENCE, (frame) => {
-    const body = parseJson(frame.body);
-    if (!body) return;
-    const online = Array.isArray(body.online) ? body.online : [];
-    emit({
-      type: "snapshot",
-      communityId: body.communityId ?? null,
-      online,
-    });
-  }, { id: "community-user-presence" });
+  client.subscribe(
+    COMMUNITY_SOCKET_DEST.USER_ERRORS,
+    (frame) => {
+      const body = unwrapSocketBody(parseJson(frame.body));
+      emit({
+        type: "error",
+        code: typeof body?.code === "string" ? body.code : "",
+        message: typeof body?.message === "string" ? body.message : "",
+      });
+    },
+    { id: "community-user-errors" }
+  );
+  client.subscribe(
+    COMMUNITY_SOCKET_DEST.USER_MEMBERSHIP,
+    (frame) => {
+      const body = unwrapSocketBody(parseJson(frame.body));
+      if (!body) return;
+      emit({
+        type: "membership",
+        communityId: body.communityId ?? null,
+        userId: body.userId ?? null,
+        membership: typeof body.membership === "string" ? body.membership : "",
+      });
+    },
+    { id: "community-user-membership" }
+  );
+  client.subscribe(
+    COMMUNITY_SOCKET_DEST.USER_PRESENCE,
+    (frame) => {
+      const body = unwrapSocketBody(parseJson(frame.body));
+      if (!body) return;
+      const online = Array.isArray(body.online) ? body.online : [];
+      emit({
+        type: "snapshot",
+        communityId: body.communityId ?? null,
+        online,
+      });
+    },
+    { id: "community-user-presence" }
+  );
   userQueuesBound = true;
 }
 
-function dropRoomSubscriptions() {
-  roomSubscriptions.forEach((entry) => {
-    try {
-      entry.messages?.unsubscribe();
-    } catch {
-      /* already gone */
-    }
-    try {
-      entry.presence?.unsubscribe();
-    } catch {
-      /* already gone */
-    }
-  });
+function forgetLocalRoom(key) {
+  roomSubscriptions.delete(key);
+}
+
+function dropLocalRoomSubscriptions() {
   roomSubscriptions.clear();
 }
 
-export function subscribeCommunityRoom(communityId) {
-  if (!client?.connected || communityId == null || communityId === "") return;
-  const key = String(communityId);
-  if (roomSubscriptions.has(key)) return;
-  const messages = client.subscribe(COMMUNITY_SOCKET_DEST.messages(key), (frame) => {
-    const mapped = mapCommunityMessage(parseJson(frame.body));
-    if (!mapped?.id) return;
-    emit({ type: "message", communityId: mapped.communityId ?? key, message: mapped });
-  }, { id: `community-${key}-messages` });
-  const presence = client.subscribe(COMMUNITY_SOCKET_DEST.presence(key), (frame) => {
-    const body = parseJson(frame.body);
-    if (!body) return;
-    emit({
-      type: "presence",
-      communityId: body.communityId ?? key,
-      userId: body.userId ?? null,
-      status: typeof body.status === "string" ? body.status : "",
-    });
-  }, { id: `community-${key}-presence` });
-  roomSubscriptions.set(key, { messages, presence });
-}
-
-export function unsubscribeCommunityRoom(communityId) {
+function detachRoomSubscriptions(communityId) {
   const key = String(communityId ?? "");
   const entry = roomSubscriptions.get(key);
   if (!entry) return;
   try {
-    entry.messages?.unsubscribe();
+    entry.messages?.unsubscribe({ destination: entry.messagesDest });
   } catch {
     /* already gone */
   }
   try {
-    entry.presence?.unsubscribe();
+    entry.presence?.unsubscribe({ destination: entry.presenceDest });
   } catch {
     /* already gone */
   }
-  roomSubscriptions.delete(key);
+  forgetLocalRoom(key);
+}
+
+function attachRoomSubscriptions(communityId) {
+  if (!client?.connected || communityId == null || communityId === "") return;
+  const key = String(communityId);
+  if (roomSubscriptions.has(key)) return;
+
+  const messagesDest = COMMUNITY_SOCKET_DEST.messages(key);
+  const presenceDest = COMMUNITY_SOCKET_DEST.presence(key);
+
+  const messages = client.subscribe(
+    messagesDest,
+    (frame) => {
+      const mapped = mapCommunityMessage(unwrapSocketBody(parseJson(frame.body)));
+      if (!mapped?.id) return;
+      emit({ type: "message", communityId: mapped.communityId ?? key, message: mapped });
+    },
+    { id: `community-${key}-messages` }
+  );
+  const presence = client.subscribe(
+    presenceDest,
+    (frame) => {
+      const body = unwrapSocketBody(parseJson(frame.body));
+      if (!body) return;
+      emit({
+        type: "presence",
+        communityId: body.communityId ?? key,
+        userId: body.userId ?? null,
+        status: typeof body.status === "string" ? body.status : "",
+      });
+    },
+    { id: `community-${key}-presence` }
+  );
+  roomSubscriptions.set(key, { messages, presence, messagesDest, presenceDest });
+}
+
+function attachDesiredRooms() {
+  desiredRooms.forEach((communityId) => {
+    attachRoomSubscriptions(communityId);
+  });
+}
+
+export function subscribeCommunityRoom(communityId) {
+  if (communityId == null || communityId === "") return;
+  const key = String(communityId);
+  desiredRooms.add(key);
+  attachRoomSubscriptions(key);
+}
+
+export function unsubscribeCommunityRoom(communityId) {
+  const key = String(communityId ?? "");
+  desiredRooms.delete(key);
+  detachRoomSubscriptions(key);
 }
 
 export function sendCommunityMessage(communityId, content) {
@@ -217,21 +265,23 @@ function startClient() {
     return;
   }
 
-  if (client) {
-    try {
-      client.deactivate();
-    } catch {
-      /* replace the client */
-    }
-    client = null;
-  }
-
+  const generation = ++socketGeneration;
+  const previous = client;
+  client = null;
   userQueuesBound = false;
-  dropRoomSubscriptions();
+  dropLocalRoomSubscriptions();
   setState(
     state === COMMUNITY_SOCKET_STATES.RECONNECTING ? COMMUNITY_SOCKET_STATES.RECONNECTING : COMMUNITY_SOCKET_STATES.CONNECTING,
     state === COMMUNITY_SOCKET_STATES.RECONNECTING ? "Reconnecting…" : "Connecting…"
   );
+
+  if (previous) {
+    try {
+      previous.deactivate();
+    } catch {
+      /* replace the client */
+    }
+  }
 
   const next = new Client({
     brokerURL: communityBrokerUrl(),
@@ -240,6 +290,9 @@ function startClient() {
     heartbeatOutgoing: COMMUNITY_HEARTBEAT_MS,
     // CONNECT identity is the Authorization header. The handshake URL has no token.
     beforeConnect: () => {
+      if (generation !== socketGeneration) {
+        throw new Error("community-socket-replaced");
+      }
       const header = getAuthorizationHeader();
       if (!header) {
         stopped = true;
@@ -249,13 +302,15 @@ function startClient() {
       next.connectHeaders = { Authorization: header };
     },
     onConnect: () => {
+      if (generation !== socketGeneration) return;
       connectionEpoch += 1;
       reconnectDelay = COMMUNITY_RECONNECT.INITIAL_DELAY_MS;
       bindUserQueues();
+      attachDesiredRooms();
       setState(COMMUNITY_SOCKET_STATES.CONNECTED);
-      console.warn("community socket", "connected");
     },
     onStompError: (frame) => {
+      if (generation !== socketGeneration) return;
       const kind = classifyConnectFailure(frameMessage(frame));
       if (kind === "extension") {
         stopped = true;
@@ -271,18 +326,17 @@ function startClient() {
         stopped = true;
         setState(COMMUNITY_SOCKET_STATES.UNAUTHORIZED, "Your session has ended. Please sign in again.");
         endSession({ redirect: true });
-        return;
       }
-      console.warn("community socket", "stomp-error");
     },
     onWebSocketClose: () => {
+      if (generation !== socketGeneration) return;
       userQueuesBound = false;
-      dropRoomSubscriptions();
+      dropLocalRoomSubscriptions();
       if (manualClose || stopped) return;
       scheduleReconnect();
     },
     onWebSocketError: () => {
-      console.warn("community socket", "ws-error");
+      /* close handler owns reconnect */
     },
   });
 
@@ -290,7 +344,7 @@ function startClient() {
   try {
     next.activate();
   } catch {
-    if (!stopped && !manualClose) scheduleReconnect();
+    if (generation === socketGeneration && !stopped && !manualClose) scheduleReconnect();
   }
 }
 
@@ -303,12 +357,31 @@ export function connectCommunitySocket() {
   startClient();
 }
 
+/**
+ * Keep the current session when this room is already attached. If the socket is
+ * up but the room is missing, open a new session so the server registry and the
+ * broker subscription stay aligned.
+ */
+export function ensureCommunityRoom(communityId) {
+  if (communityId == null || communityId === "") return;
+  const key = String(communityId);
+  desiredRooms.add(key);
+  if (client?.connected && roomSubscriptions.has(key)) return;
+  if (client?.connected) {
+    startClient();
+    return;
+  }
+  connectCommunitySocket();
+}
+
 export function disconnectCommunitySocket() {
   manualClose = true;
   stopped = false;
+  socketGeneration += 1;
   clearReconnect();
   userQueuesBound = false;
-  dropRoomSubscriptions();
+  desiredRooms.clear();
+  dropLocalRoomSubscriptions();
   const current = client;
   client = null;
   if (current) {

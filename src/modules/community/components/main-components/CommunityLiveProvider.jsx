@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../../../auth/hooks/useAuth";
 import {
-  connectCommunitySocket,
+  ensureCommunityRoom,
   getCommunitySocketState,
   sendCommunityMessage,
   subscribeCommunityRoom,
@@ -61,6 +61,7 @@ export default function CommunityLiveProvider({ communityId, onProtectedError, c
   const historyReadyRef = useRef(false);
   const presenceKnownRef = useRef(false);
   const epochSeenRef = useRef(0);
+  const watchedIdRef = useRef(communityId);
   const communityIdRef = useRef(communityId);
   const userIdRef = useRef(user?.id);
   const onProtectedErrorRef = useRef(onProtectedError);
@@ -248,14 +249,18 @@ export default function CommunityLiveProvider({ communityId, onProtectedError, c
   }, [history.status]);
 
   useEffect(() => {
+    const previous = watchedIdRef.current;
+    if (previous != null && String(previous) !== String(communityId)) {
+      unsubscribeCommunityRoom(previous);
+    }
+    watchedIdRef.current = communityId;
     const unsub = subscribeCommunitySocket((event) => handlerRef.current(event));
     const frame = window.requestAnimationFrame(() => {
-      connectCommunitySocket();
+      ensureCommunityRoom(communityId);
     });
     return () => {
       window.cancelAnimationFrame(frame);
       unsub();
-      unsubscribeCommunityRoom(communityId);
       clearPendingTimer();
       bufferRef.current = [];
       pendingRef.current = null;

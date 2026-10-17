@@ -28,3 +28,4 @@ dist-ssr
 
 # Extra Ref Files Used for local development
 docs/
+.cursor/

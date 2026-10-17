@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../../../auth/hooks/useAuth";
 import { acceptCommunityTerms, getCommunityAccount } from "../../api/communityApi";
+import { disconnectCommunitySocket } from "../../api/communitySocket";
 import { COMMUNITY_ACCOUNT_STATES, termsCopyFor } from "../../config/communityConstants";
 import { CommunityAccountContext } from "../../hooks/communityAccountContext";
 import { classifyCommunityError } from "../../utils/communityErrors";
@@ -38,6 +39,9 @@ export default function CommunityAccountProvider({ children }) {
 
   useEffect(() => {
     authStatusRef.current = authStatus;
+    if (authStatus !== "authenticated") {
+      disconnectCommunitySocket();
+    }
   }, [authStatus]);
 
   if (authStatus !== "authenticated" && account.status !== "idle") {

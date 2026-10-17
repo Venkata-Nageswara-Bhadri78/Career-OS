@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { APP_PATHS } from "../../../common/config/appPaths";
 import { getCommunity, getMyMembership, joinCommunity, leaveCommunity, listCommunityMembers } from "../api/communityApi";
+import { teardownCommunityRoom } from "../api/communitySocket";
 import { beginAutoJoin, clearAutoJoin, noteAutoJoin } from "./communityJoinGate";
 import { useCommunityAccount } from "./useCommunityAccount";
 import { useCommunityMemberships } from "./useCommunityMemberships";
@@ -238,6 +239,7 @@ export function useCommunityRoom(communityId) {
         setError("This community could not be left.");
         return;
       }
+      teardownCommunityRoom(communityId);
       memberships.dropCommunity(communityId);
       setLeaveOpen(false);
       navigate(APP_PATHS.COMMUNITY, {
@@ -281,5 +283,6 @@ export function useCommunityRoom(communityId) {
     confirmLeave,
     join,
     retry: () => setAttempt((current) => current + 1),
+    handleProtectedFailure: settleProtectedError,
   };
 }

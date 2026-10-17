@@ -3,12 +3,13 @@ import { APP_PATHS } from "../../../../common/config/appPaths";
 import { communityJobLine, communityLabel } from "../../utils/communityDisplay";
 import { formatCommunityTimestamp } from "../../utils/communityTime";
 
-export default function CommunityRoomHeader({ summary, memberCount, onOpenMembers, onLeave }) {
+export default function CommunityRoomHeader({ summary, memberCount, onlineCount, presenceKnown, onOpenMembers, onLeave }) {
   const label = communityLabel(summary);
   const line = communityJobLine(summary);
   const created = formatCommunityTimestamp(summary?.createdAt);
   const countLabel =
     typeof memberCount === "number" ? (memberCount === 1 ? "1 active member" : `${memberCount} active members`) : "";
+  const onlineLabel = presenceKnown && typeof onlineCount === "number" ? `${onlineCount} online` : "";
 
   return (
     <header className="shrink-0 border-b border-line px-4 py-3">
@@ -22,6 +23,7 @@ export default function CommunityRoomHeader({ summary, memberCount, onOpenMember
           </h1>
           {line && line !== label ? <p className="truncate text-sm text-muted">{line}</p> : null}
           {countLabel ? <p className="mt-1 text-sm text-ink">{countLabel}</p> : null}
+          {onlineLabel ? <p className="text-xs text-muted">{onlineLabel}</p> : null}
           {created ? <p className="text-xs text-muted">Created {created}</p> : null}
         </div>
         <div className="flex shrink-0 gap-2">

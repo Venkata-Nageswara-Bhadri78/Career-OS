@@ -1,9 +1,20 @@
 import { communityInitials } from "../../utils/communityDisplay";
 import { formatCommunityTimestamp } from "../../utils/communityTime";
+import CommunityPresenceDot from "../sub-components/CommunityPresenceDot";
 
-export default function CommunityMemberPanel({ members, memberCount, loading, error, onClose }) {
+export default function CommunityMemberPanel({
+  members,
+  memberCount,
+  loading,
+  error,
+  onClose,
+  presenceOf,
+  presenceKnown,
+  onlineCount,
+}) {
   const countLabel =
     typeof memberCount === "number" ? (memberCount === 1 ? "1 active member" : `${memberCount} active members`) : "";
+  const onlineLabel = presenceKnown && typeof onlineCount === "number" ? `${onlineCount} online` : "";
 
   return (
     <aside
@@ -14,6 +25,7 @@ export default function CommunityMemberPanel({ members, memberCount, loading, er
         <div className="min-w-0">
           <h2 className="text-sm font-semibold text-ink">Members</h2>
           {countLabel ? <p className="truncate text-xs text-muted">{countLabel}</p> : null}
+          {onlineLabel ? <p className="truncate text-xs text-muted">{onlineLabel}</p> : null}
         </div>
         <button
           type="button"
@@ -34,13 +46,15 @@ export default function CommunityMemberPanel({ members, memberCount, loading, er
           {members.map((member) => {
             const name = member?.displayName || member?.username || "Member";
             const joined = formatCommunityTimestamp(member?.joinedAt);
+            const presence = presenceOf?.(member?.userId) || "unknown";
             return (
               <li key={member?.userId ?? name} className="flex min-w-0 items-center gap-2 rounded-lg px-2 py-2">
                 <span
                   aria-hidden="true"
-                  className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-line bg-field text-[10px] font-semibold text-ink"
+                  className="relative grid h-8 w-8 shrink-0 place-items-center rounded-full border border-line bg-field text-[10px] font-semibold text-ink"
                 >
                   {communityInitials(name)}
+                  <CommunityPresenceDot status={presence} />
                 </span>
                 <span className="min-w-0">
                   <span className="block truncate text-sm text-ink">{name}</span>

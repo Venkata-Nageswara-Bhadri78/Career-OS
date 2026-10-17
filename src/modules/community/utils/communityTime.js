@@ -38,3 +38,29 @@ export function formatCommunityTimestamp(value) {
     minute: "2-digit",
   }).format(date);
 }
+
+export function formatCommunityDate(value) {
+  const date = value instanceof Date && !Number.isNaN(value.getTime()) ? value : parseServerTimestamp(value);
+  if (!date) return "";
+  return new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(date);
+}
+
+export function formatCommunityClock(value) {
+  const date = value instanceof Date && !Number.isNaN(value.getTime()) ? value : parseServerTimestamp(value);
+  if (!date) return "";
+  return new Intl.DateTimeFormat(undefined, {
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(date);
+}
+
+/** Calendar key from a real createdAt. Null when the string cannot be parsed. */
+export function communityDateKey(value) {
+  const date = parseServerTimestamp(value);
+  if (!date) return null;
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}

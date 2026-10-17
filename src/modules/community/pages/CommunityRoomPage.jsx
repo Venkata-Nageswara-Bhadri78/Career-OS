@@ -2,12 +2,62 @@ import { Link, useParams } from "react-router-dom";
 import { APP_PATHS } from "../../../common/config/appPaths";
 import CommunityJoinCard from "../components/main-components/CommunityJoinCard";
 import CommunityLeaveDialog from "../components/main-components/CommunityLeaveDialog";
+import CommunityLiveProvider from "../components/main-components/CommunityLiveProvider";
 import CommunityMemberPanel from "../components/main-components/CommunityMemberPanel";
+import CommunityMessagesProvider from "../components/main-components/CommunityMessagesProvider";
 import CommunityRoomHeader from "../components/main-components/CommunityRoomHeader";
 import CommunityTranscript from "../components/main-components/CommunityTranscript";
+import CommunityConnectionStatus from "../components/sub-components/CommunityConnectionStatus";
 import CommunityStatusPanel from "../components/sub-components/CommunityStatusPanel";
+import { useCommunityLive } from "../hooks/communityLiveContext";
 import { CommunityRoomContext } from "../hooks/communityRoomContext";
 import { useCommunityRoom } from "../hooks/useCommunityRoom";
+
+function CommunityRoomBody({ room }) {
+  const live = useCommunityLive();
+
+  return (
+    <div className="relative flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
+      <CommunityRoomHeader
+        summary={room.header}
+        memberCount={room.memberCount}
+        onlineCount={live.onlineCount}
+        presenceKnown={live.presenceKnown}
+        onOpenMembers={room.openMembers}
+        onLeave={room.requestLeave}
+      />
+      <CommunityConnectionStatus state={live.socketState} reason={live.socketReason} />
+      {room.error ? (
+        <p className="mx-4 mt-3 rounded-xl border border-line bg-field px-3 py-2 text-sm text-danger" role="alert">
+          {room.error}
+        </p>
+      ) : null}
+      <div className="relative flex min-h-0 min-w-0 flex-1">
+        <CommunityTranscript />
+        {room.membersOpen ? (
+          <CommunityMemberPanel
+            members={room.members}
+            memberCount={room.memberCount}
+            loading={room.membersLoading}
+            error={room.membersError}
+            onClose={room.closeMembers}
+            presenceOf={live.presenceOf}
+            presenceKnown={live.presenceKnown}
+            onlineCount={live.onlineCount}
+          />
+        ) : null}
+      </div>
+      <CommunityLeaveDialog
+        open={room.leaveOpen}
+        creator={room.creator}
+        busy={room.leaving}
+        error={room.leaveOpen ? room.error : ""}
+        onConfirm={room.confirmLeave}
+        onClose={room.cancelLeave}
+      />
+    </div>
+  );
+}
 
 export default function CommunityRoomPage() {
   const { communityId } = useParams();
@@ -60,39 +110,16 @@ export default function CommunityRoomPage() {
     );
   } else {
     body = (
-      <div className="relative flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
-        <CommunityRoomHeader
-          summary={room.header}
-          memberCount={room.memberCount}
-          onOpenMembers={room.openMembers}
-          onLeave={room.requestLeave}
-        />
-        {room.error ? (
-          <p className="mx-4 mt-3 rounded-xl border border-line bg-field px-3 py-2 text-sm text-danger" role="alert">
-            {room.error}
-          </p>
-        ) : null}
-        <div className="relative flex min-h-0 min-w-0 flex-1">
-          <CommunityTranscript />
-          {room.membersOpen ? (
-            <CommunityMemberPanel
-              members={room.members}
-              memberCount={room.memberCount}
-              loading={room.membersLoading}
-              error={room.membersError}
-              onClose={room.closeMembers}
-            />
-          ) : null}
-        </div>
-        <CommunityLeaveDialog
-          open={room.leaveOpen}
-          creator={room.creator}
-          busy={room.leaving}
-          error={room.leaveOpen ? room.error : ""}
-          onConfirm={room.confirmLeave}
-          onClose={room.cancelLeave}
-        />
-      </div>
+      <CommunityMessagesProvider
+        key={communityId}
+        communityId={communityId}
+        enabled
+        onProtectedError={room.handleProtectedFailure}
+      >
+        <CommunityLiveProvider communityId={communityId} onProtectedError={room.handleProtectedFailure}>
+          <CommunityRoomBody room={room} />
+        </CommunityLiveProvider>
+      </CommunityMessagesProvider>
     );
   }
 

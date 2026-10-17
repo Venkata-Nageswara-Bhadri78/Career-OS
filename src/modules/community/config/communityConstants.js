@@ -37,11 +37,43 @@ export const COMMUNITY_LIMITS = Object.freeze({
 
 export const COMMUNITY_HEARTBEAT_MS = 10000;
 
+export const COMMUNITY_SEND_TIMEOUT_MS = 10000;
+
 /** Task 5 owns the socket. The docs require backoff with a cap and do not give millisecond values. */
 export const COMMUNITY_RECONNECT = Object.freeze({
   INITIAL_DELAY_MS: 1000,
   MAX_DELAY_MS: 30000,
   MULTIPLIER: 2,
+});
+
+export const COMMUNITY_WS_PATH = "/ws/community";
+
+export const COMMUNITY_SOCKET_DEST = Object.freeze({
+  USER_ERRORS: "/user/queue/errors",
+  USER_MEMBERSHIP: "/user/queue/membership",
+  USER_PRESENCE: "/user/queue/presence",
+  send: (communityId) => `/app/communities/${communityId}/messages`,
+  messages: (communityId) => `/topic/communities/${communityId}/messages`,
+  presence: (communityId) => `/topic/communities/${communityId}/presence`,
+});
+
+export const COMMUNITY_SOCKET_CODES = Object.freeze({
+  MEMBERSHIP_REQUIRED: "MEMBERSHIP_REQUIRED",
+  ACCOUNT_REQUIRED: "ACCOUNT_REQUIRED",
+  TERMS_REQUIRED: "TERMS_REQUIRED",
+  COMMUNITY_UNAVAILABLE: "COMMUNITY_UNAVAILABLE",
+  INVALID_MESSAGE: "INVALID_MESSAGE",
+  DESTINATION_NOT_ALLOWED: "DESTINATION_NOT_ALLOWED",
+  SEND_FAILED: "SEND_FAILED",
+});
+
+export const COMMUNITY_SOCKET_STATES = Object.freeze({
+  IDLE: "idle",
+  CONNECTING: "connecting",
+  CONNECTED: "connected",
+  RECONNECTING: "reconnecting",
+  FAILED: "failed",
+  UNAUTHORIZED: "unauthorized",
 });
 
 export const COMMUNITY_ACCOUNT_STATES = Object.freeze({

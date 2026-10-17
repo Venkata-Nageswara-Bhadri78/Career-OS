@@ -1,5 +1,6 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { listMyCommunities } from "../../api/communityApi";
+import { disconnectCommunitySocket } from "../../api/communitySocket";
 import { CommunityMembershipsContext } from "../../hooks/communityMembershipsContext";
 import { classifyCommunityError, communityErrorText } from "../../utils/communityErrors";
 
@@ -51,6 +52,12 @@ export default function CommunityMembershipsProvider({ children }) {
     setCommunities((current) => current.filter((item) => String(item.id) !== String(communityId)));
     setStatus("ready");
     setError("");
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      disconnectCommunitySocket();
+    };
   }, []);
 
   const noteSummary = useCallback((summary) => {

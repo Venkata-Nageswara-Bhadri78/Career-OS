@@ -11,8 +11,11 @@ export const APP_PATHS = Object.freeze({
   AI: "/ai",
   CUSTOM_PROMPTS: "/custom-prompts",
   JOB_DRAFTS: "/job-drafts",
+  COMMUNITY: "/community",
   jobDetails: (jobId) => `/jobs/${encodeURIComponent(String(jobId))}`,
   jobChat: (jobId) => `/jobs/${encodeURIComponent(String(jobId))}/interact`,
+  communityRoom: (communityId) => `/community/${encodeURIComponent(String(communityId))}`,
+  communityStart: (jobId) => `/community/start/${encodeURIComponent(String(jobId))}`,
 });
 
 export function isJobDetailsPath(pathname) {

@@ -1,6 +1,8 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useNavigate } from "react-router-dom";
 import Spinner from "../../../../common/components/loaders/Spinner";
+import { APP_PATHS } from "../../../../common/config/appPaths";
 import jobApi from "../../api/jobApi";
 
 const NOTES_MAX_LENGTH = 5000;
@@ -21,6 +23,7 @@ function placeFloatingPanel(anchor, panel, estimatedHeight, estimatedWidth) {
 }
 
 export default function JobActionsMenu({ job, onDeleteClick, onNotesSaved }) {
+  const navigate = useNavigate();
   const notesId = useId();
   const rootRef = useRef(null);
   const buttonRef = useRef(null);
@@ -64,7 +67,7 @@ export default function JobActionsMenu({ job, onDeleteClick, onNotesSaved }) {
     const place = () => {
       const anchor = buttonRef.current;
       if (!anchor) return;
-      const next = placeFloatingPanel(anchor, panelRef.current, isNotesOpen ? 228 : 120, isNotesOpen ? 300 : 132);
+      const next = placeFloatingPanel(anchor, panelRef.current, isNotesOpen ? 228 : 156, isNotesOpen ? 300 : 200);
       setPanelStyle((prev) =>
         prev && prev.top === next.top && prev.left === next.left && prev.width === next.width ? prev : next
       );
@@ -145,6 +148,19 @@ export default function JobActionsMenu({ job, onDeleteClick, onNotesSaved }) {
               className="fixed z-[80] w-max rounded-xl border border-line bg-white p-1 shadow-xl"
               style={panelPosition}
             >
+              <button
+                type="button"
+                role="menuitem"
+                disabled={job?.id == null}
+                onClick={() => {
+                  if (job?.id == null) return;
+                  setIsOpen(false);
+                  navigate(APP_PATHS.communityStart(job.id));
+                }}
+                className="whitespace-nowrap rounded-lg px-2.5 py-1.5 text-left text-xs font-medium text-ink transition-colors hover:bg-field disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Open job community
+              </button>
               <button
                 type="button"
                 role="menuitem"

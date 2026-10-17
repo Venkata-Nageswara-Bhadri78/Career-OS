@@ -29,6 +29,10 @@ import {
 } from "./modules/chat-assistant/routes/chatAssistantRoutes";
 import { AiRouteTree } from "./modules/ai/routes/aiRoutes";
 import { UserRouteTree } from "./modules/user/routes/userRoutes";
+import { CommunityRouteTree } from "./modules/community/routes/communityRoutes";
+import CommunityListShellBinder from "./modules/community/components/main-components/CommunityListShellBinder";
+import CommunityListSlotProvider from "./modules/community/components/main-components/CommunityListSlotProvider";
+import CommunityMembershipsProvider from "./modules/community/components/main-components/CommunityMembershipsProvider";
 
 function LandingRoute() {
   const { isAuthenticated, isBooting, needsUsername } = useAuth();
@@ -46,8 +50,13 @@ function ProtectedAppShell() {
   return (
     <ShellSessionProvider value={session}>
       <ChatHistorySlotProvider>
-        <ChatHistoryShellBinder />
-        <MainLayout />
+        <CommunityListSlotProvider>
+          <CommunityMembershipsProvider>
+            <ChatHistoryShellBinder />
+            <CommunityListShellBinder />
+            <MainLayout />
+          </CommunityMembershipsProvider>
+        </CommunityListSlotProvider>
       </ChatHistorySlotProvider>
     </ShellSessionProvider>
   );
@@ -131,6 +140,7 @@ function App() {
                     })}
                     <Route path="/jobs" element={<Navigate to={APP_PATHS.DASHBOARD} replace />} />
                     {ChatAssistantRouteTree()}
+                    {CommunityRouteTree()}
                     <Route path="/jobs/:jobId" element={<JobDetailsPage />} />
                     {AiRouteTree()}
                   </Route>

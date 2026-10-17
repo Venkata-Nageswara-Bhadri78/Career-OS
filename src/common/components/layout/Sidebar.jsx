@@ -5,6 +5,7 @@ import { SHELL_NAV_ITEMS, isNavItemActive } from "../../config/shellConfig";
 import { useShellSession } from "../../session/useShellSession";
 import ChatHistoryPanel from "./ChatHistoryPanel";
 import { useChatHistorySlot } from "./chatHistoryContext";
+import CommunityListPanel from "../../../modules/community/components/main-components/CommunityListPanel";
 import { AIIcon, CloseIcon, CustomPromptsIcon, DashboardIcon, JobDraftsIcon, LogoutIcon, ProfileIcon, SettingsIcon } from "./ShellIcons";
 
 const NAV_ICONS = {
@@ -86,7 +87,7 @@ export default function Sidebar({ open, onClose }) {
           })}
         </nav>
 
-        <div className="flex-1 min-h-0 px-2 pb-2 flex flex-col">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 px-2 pb-2">
           <ChatHistoryPanel
             chats={history.chats}
             isLoading={history.isLoading}
@@ -99,6 +100,7 @@ export default function Sidebar({ open, onClose }) {
             onDelete={history.deleteChat}
             onRetry={history.retry}
           />
+          <CommunityListPanel />
         </div>
 
         <div className="mt-auto p-2 border-t border-line space-y-0.5 shrink-0">
